@@ -1,6 +1,6 @@
 name = "Examples"
 uuid = "940e8692-a183-489f-acd6-ad125fa6e02d"
-authors = ["Jeff Fessler <fessler@umich.edu>" and others]
+authors = ["Jeff Fessler <fessler@umich.edu> and others"]
 version = "0.0.1"
 
 [compat]
