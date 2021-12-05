@@ -19,10 +19,9 @@ todo:
 
 
 <!-- URLs -->
-[coveralls-url]: https://coveralls.io/github/JeffFessler/MIRT.jl?branch=master
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://JeffFessler.github.io/MIRT.jl/stable
+[docs-stable-url]: https://JuliaImageRecon.github.io/Examples.jl/stable
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-dev-url]: https://JeffFessler.github.io/MIRT.jl/dev
+[docs-dev-url]: https://JuliaImageRecon.github.io/Examples.jl/dev
 [license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat
 [license-url]: LICENSE
