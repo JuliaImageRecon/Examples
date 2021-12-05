@@ -18,7 +18,7 @@ nb = false # Set to true to generate the notebooks
 for (root, _, files) in walkdir(lit), file in files
     splitext(file)[2] == ".jl" || continue
     ipath = joinpath(root, file)
-    opath = splitdir(replace(ipath, lit=>src))[1]
+    opath = splitdir(replace(ipath, lit => src))[1]
     Literate.markdown(ipath, opath, documenter = execute)
     nb && Literate.notebook(ipath, notebooks, execute = execute)
 end
@@ -38,7 +38,7 @@ format = Documenter.HTML(;
 )
 
 makedocs(;
-    modules = [],
+    modules = Module[],
     authors = "Jeff Fessler and contributors",
     sitename = "Examples",
     format,

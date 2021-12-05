@@ -20,6 +20,7 @@
 # and ignore the effects of B0 field inhomogeneity.
 
 # First we tell Julia what packages we need for these examples.
+# Use `Pkg.add()` as needed.
 
 using ImagePhantoms: shepp_logan, SheppLoganToft, spectrum, phantom # Gauss2
 using NFFT
@@ -30,12 +31,14 @@ using LaTeXStrings
 using MIRTjim: jim, prompt
 using MIRT: Anufft
 
+
 # The following line is helpful when running this jl-file as a script;
 # this way it will prompt user to hit a key after each image is displayed.
 
 isinteractive() && jim(:prompt, true);
 
-## Radial sampling
+
+# ## Radial sampling
 
 # We focus on radial sampling as a simple representative non-Cartesian case.
 # Consider imaging a 256mm × 256mm field of FOV
@@ -57,7 +60,9 @@ plot(νx, νy,
 	title = "Radial k-space sampling",
 )
 
-isinteractive() && prompt()
+#
+isinteractive() && prompt();
+
 
 # For the NUFFT routines considered here,
 # the sampling arguments must be "Ω" values:
@@ -76,6 +81,7 @@ scatter(Ωx, Ωy,
 	title = "Radial k-space sampling",
 )
 
+#
 isinteractive() && prompt()
 
 
@@ -117,7 +123,7 @@ jim(kr, kϕ, abs.(data), title="k-space data magnitude",
 
 using StatsBase: fit, Histogram, weights
 
-# This function is a work-around because `weights` in StatsBase
+# The following function is a work-around because `weights` in StatsBase
 # is
 # [limited to Real data](https://github.com/JuliaStats/StatsBase.jl/issues/745),
 # so here we bin the real and imaginary k-space data separately,
@@ -192,7 +198,7 @@ jim(x, y, gridded2, title="NUFFT gridding without DCF")
 # especially the ramp filter,
 # to define a reasonable density compensation function (DCF).
 
-# Here is a naive version that uses the ramp filter in a simple way.
+# Here is a basic DCF version that uses the ramp filter in a simple way.
 # The `dcf .* data` line uses Julia's broadcast feature
 # to apply the 1D DCF to each radial spoke.
 
@@ -200,7 +206,7 @@ dcf = abs.(kr) # (N+1) weights along k-space polar coordinate
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded3 = A' * vec(dcf .* data)
 p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF")
-jim(p0, p3)
+
 
 # The image is more reasonable than without any DCF,
 # but we can do better using the correction of
@@ -212,14 +218,14 @@ dν = 1/FOV # k-space radial sample spacing
 dcf = pi / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
 dcf[kr .== 0] .= pi * (dν/2)^2 / Nϕ # area of center disk
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
-# kr = ((-N÷2):(N÷2)) / (N÷2) * kmax # radial sampling in k-space
 gridded4 = A' * vec(dcf .* data)
 p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF")
-jim(p0, p4)
+
 
 # Finally we have a NUFFT gridded image with DCF
 # that has the appropriate range of values,
 # but it still looks less than ideal.
+# So next we try an iterative approach.
 
 
 # ## Iterative MR image reconstruction using an NUFFT.
