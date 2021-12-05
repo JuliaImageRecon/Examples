@@ -231,3 +231,15 @@ p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF")
 # ## Iterative MR image reconstruction using an NUFFT.
 
 # todo
+
+
+# ## Reproducibility
+
+# This page was generated with the following version of Julia:
+
+versioninfo()
+
+# And with the following package versions
+
+import Pkg
+Pkg.status()
