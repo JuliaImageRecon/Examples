@@ -1,10 +1,16 @@
 #---------------------------------------------------------
-# # [MRI/nufft](@id 1-nufft)
+# # [NUFFT Overview](@id 1-nufft)
 #---------------------------------------------------------
 
 # This example illustrates how to use Nonuniform FFT (NUFFT)
 # for image reconstruction in MRI
 # using the Julia language.
+
+# This entire page was generated using a single Julia file:
+# [1-nufft.jl](https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/1-nufft.jl).
+# In any such Julia documentation,
+# you can access the source code
+# using the "Edit on GitHub" link in the top right.
 
 # Some MRI scans use non-Cartesian sampling patterns
 # (like radial and spiral k-space trajectories, among others),
@@ -19,17 +25,37 @@
 # For simplicity the examples consider the case of single-coil data
 # and ignore the effects of B0 field inhomogeneity.
 
-# First we tell Julia what packages we need for these examples.
-# Use `Pkg.add()` as needed.
+
+# First we add the Julia packages that are need for these examples.
+# Change `false` to `true` in the following code block
+# if you are using any of the following packages for the first time.
+
+if false
+    import Pkg
+    Pkg.add([
+        "ImagePhantoms"
+        "Plots"
+        "Unitful"
+        "UnitfulRecipes"
+        "LaTeXStrings"
+        "MIRTjim"
+        "MIRT"
+        "InteractiveUtils"
+    ])
+end
+
+
+# Now tell this Julia session to use the following packages for this example.
+# Run `Pkg.add()` in the preceding code block first, if needed.
 
 using ImagePhantoms: shepp_logan, SheppLoganToft, spectrum, phantom # Gauss2
-using NFFT
 using Plots; default(label="", markerstrokecolor=:auto)
 using Unitful: mm
 using UnitfulRecipes
 using LaTeXStrings
 using MIRTjim: jim, prompt
 using MIRT: Anufft
+using InteractiveUtils: versioninfo
 
 
 # The following line is helpful when running this jl-file as a script;
@@ -55,9 +81,9 @@ kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
 νx = kr * cos.(kϕ)' # N × Nϕ k-space sampling in cycles/mm
 νy = kr * sin.(kϕ)'
 plot(νx, νy,
-	xlabel=L"\nu_x", ylabel=L"\nu_y",
-	aspect_ratio = 1,
-	title = "Radial k-space sampling",
+    xlabel=L"\nu_x", ylabel=L"\nu_y",
+    aspect_ratio = 1,
+    title = "Radial k-space sampling",
 )
 
 #
@@ -72,13 +98,13 @@ isinteractive() && prompt();
 Ωy = (2π * Δx) * νy # in pseudo-units of radians / sample
 
 scatter(Ωx, Ωy,
-	xlabel=L"\Omega_x", ylabel=L"\Omega_y",
-	xticks=((-1:1)*π, ["-π", "0", "π"]),
-	yticks=((-1:1)*π, ["-π", "0", "π"]),
-	xlims=(-π,π) .* 1.1,
-	ylims=(-π,π) .* 1.1,
-	aspect_ratio = 1, markersize = 0.5,
-	title = "Radial k-space sampling",
+    xlabel=L"\Omega_x", ylabel=L"\Omega_y",
+    xticks=((-1:1)*π, ["-π", "0", "π"]),
+    yticks=((-1:1)*π, ["-π", "0", "π"]),
+    xlims=(-π,π) .* 1.1,
+    ylims=(-π,π) .* 1.1,
+    aspect_ratio = 1, markersize = 0.5,
+    title = "Radial k-space sampling",
 )
 
 #
@@ -96,12 +122,12 @@ object = shepp_logan(SheppLoganToft(); fovs=(FOV,FOV))
 data = spectrum(object).(νx,νy)
 data = data / oneunit(eltype(data)) # abandon units at this point
 jim(kr, kϕ, abs.(data), title="k-space data magnitude",
-	xlabel=L"k_r",
-	ylabel=L"k_{\phi}",
-	xticks = (-1:1) .* maximum(abs, kr),
-	yticks = (0,π),
-	ylims = (0,π),
-	aspect_ratio = :none,
+    xlabel=L"k_r",
+    ylabel=L"k_{\phi}",
+    xticks = (-1:1) .* maximum(abs, kr),
+    yticks = (0,π),
+    ylims = (0,π),
+    aspect_ratio = :none,
 )
 
 
@@ -129,12 +155,12 @@ using StatsBase: fit, Histogram, weights
 # so here we bin the real and imaginary k-space data separately,
 # and handle the units.
 function histogram(coord, vals::AbstractArray{<:Number}, edges)
-	u = oneunit(eltype(vals)) 
-	wr = weights(real(vec(vals / u)))
-	wi = weights(imag(vec(vals / u)))
-	tmp1 = fit(Histogram, coord, wr, edges)
-	tmp2 = fit(Histogram, coord, wi, edges)
-	return u * complex.(tmp1.weights, tmp2.weights)
+    u = oneunit(eltype(vals)) 
+    wr = weights(real(vec(vals / u)))
+    wi = weights(imag(vec(vals / u)))
+    tmp1 = fit(Histogram, coord, wr, edges)
+    tmp2 = fit(Histogram, coord, wi, edges)
+    return u * complex.(tmp1.weights, tmp2.weights)
 end
 
 kx = N * Δx * νx # N × Nϕ k-space sampling in cycles/mm
@@ -237,7 +263,10 @@ p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF")
 
 # This page was generated with the following version of Julia:
 
-versioninfo()
+io = IOBuffer()
+versioninfo(io)
+split(String(take!(io)), '\n')
+
 
 # And with the following package versions
 
