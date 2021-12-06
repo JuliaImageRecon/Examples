@@ -24,7 +24,7 @@ and
   [Julia REPL](https://docs.julialang.org/en/v1/stdlib/REPL).
 
 * To develop code, select an editor, preferably with Julia integration, such as
-  [VSCode]( https://www.julia-vscode.org)
+  [VSCode](https://www.julia-vscode.org)
   or [vim](https://github.com/JuliaEditorSupport/julia-vim)
   perhaps with
   [tmux](https://discourse.julialang.org/t/julia-vim-tutorial-for-newbies/36636).
