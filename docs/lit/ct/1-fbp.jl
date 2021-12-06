@@ -10,7 +10,7 @@ using the Julia language.
 
 #=
 This entire page was generated using a single Julia file:
-[1-fbp.jl](@__REPO_ROOT_URL__/docs/lit/ct/1-fbp.jl).
+[1-fbp.jl](@__REPO_ROOT_URL__/ct/1-fbp.jl).
 In any such Julia documentation,
 you can access the source code
 using the "Edit on GitHub" link in the top right.
@@ -18,9 +18,9 @@ using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
 #md # [nbviewer](http://nbviewer.jupyter.org/) here:
-#md # [`1-fbp.ipynb`](@__NBVIEWER_ROOT_URL__/generated/ct/1-fbp.ipynb),
+#md # [`1-fbp.ipynb`](@__NBVIEWER_ROOT_URL__/ct/1-fbp.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
-#md # [`1-fbp.ipynb`](@__BINDER_ROOT_URL__/generated/ct/1-fbp.ipynb),
+#md # [`1-fbp.ipynb`](@__BINDER_ROOT_URL__/ct/1-fbp.ipynb),
 
 # This is under construction.
 
