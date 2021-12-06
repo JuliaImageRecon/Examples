@@ -402,7 +402,7 @@ because the k-space data came from the analytical spectrum of ellipses,
 rather than from a discrete image.
 
 
-# ### Caveats
+### Caveats
 
 * The phantom used here was real-valued, which is unrealistic
   (although the reconstruction methods did not "know" it was real).
@@ -416,9 +416,7 @@ rather than from a discrete image.
 
 # This page was generated with the following version of Julia:
 
-io = IOBuffer()
-versioninfo(io)
-split(String(take!(io)), '\n')
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
 
 
 # And with the following package versions
