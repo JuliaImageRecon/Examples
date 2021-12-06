@@ -60,10 +60,10 @@ end
 
 using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
 using Plots; default(label="", markerstrokecolor=:auto)
-using Unitful: mm
-using UnitfulRecipes
-using LaTeXStrings
-using MIRTjim: jim, prompt
+using Unitful: mm # Allows use of physical units (mm here)
+using UnitfulRecipes # Ensures that plots show appropriate units when applicable
+using LaTeXStrings # for LaTeX in plot labels, e.g., L"\alpha_n"
+using MIRTjim: jim, prompt # jiffy image display
 using MIRT: Anufft, diffl_map, ncg
 using InteractiveUtils: versioninfo
 
@@ -175,7 +175,7 @@ and handle the units.
 =#
 
 function histogram(coord, vals::AbstractArray{<:Number}, edges)
-    u = oneunit(eltype(vals)) 
+    u = oneunit(eltype(vals))
     wr = weights(real(vec(vals / u)))
     wi = weights(imag(vec(vals / u)))
     tmp1 = fit(Histogram, coord, wr, edges)
@@ -261,7 +261,7 @@ to apply the 1D DCF to each radial spoke.
 =#
 
 dν = 1/FOV # k-space radial sample spacing
-dcf = pi / Nϕ * dν * abs.(kr) # (N+1) weights along k-space polar coordinate 
+dcf = pi / Nϕ * dν * abs.(kr) # (N+1) weights along k-space polar coordinate
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded3 = A' * vec(dcf .* data)
 p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF"; clim)
@@ -301,8 +301,31 @@ So next we try an iterative approach.
 
 ## Iterative MR image reconstruction using NUFFT
 
+As an initial iterative approach,
+let's apply a few iterations of conjugate gradient (CG)
+to seek the minimizer of the least-squares cost function:
+```math
+\arg \min_{x} \frac{1}{2} \| A x - y \|_2^2.
+```
+CG is well-suited to minimizing quadratic cost functions,
+but we do not expect the image to be great quality
+because radial sampling omits the "corners" of k-space
+so the NUFFT operator ``A`` is badly conditioned.
+=#
+
+dx = FOV / N # pixel size
+dx = dx / oneunit(dx) # abandon units for now
+gradf = u -> u - vec(data/dx^2) # gradient of f(u) = 1/2 \| u - y \|^2
+curvf = u -> 1 # curvature of f(u)
+x0 = gridded4 # initial guess: best gridding reconstruction
+xls, _ = ncg([A], [gradf], [curvf], x0; niter = 20)
+p5 = jim(x, y, xls, "LS-CG reconstruction"; clim)
+
+
+#=
+To improve the results, we include regularization.
 Here we would like to reconstruct an image
-by finding the minimizer of a cost function
+by finding the minimizer of a regularized LS cost function
 such as the following:
 ```math
 \arg \min_{x} \frac{1}{2} \| A x - y \|_2^2 + \beta R(x)
@@ -341,23 +364,27 @@ wpot = z -> 1 / (1 + abs(z)/δ) # weighting function
 
 We apply a (nonlinear) CG algorithm
 to seek the minimizer of the cost function.
-[MRI optimization survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+Nonlinear CG is well suited to convex problems
+that are locally quadratic
+like the regularized cost function considered here.
+See
+[this survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+for an overview of optimization methods for MRI.
 =#
 
-dx = FOV / N # pixel size
-dx = dx / oneunit(dx) # abandon units for now
 B = [A, T] # see MIRT.ncg
 gradf = [u -> u - vec(data/dx^2), # data-term gradient, correct for pixel area
          u -> β * (u .* wpot.(u))] # regularizer gradient
 curvf = [u -> 1, u -> β] # curvature of quadratic majorizers
 x0 = gridded4 # initial guess is best gridding reconstruction
 xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
-p5 = jim(x, y, xhat, "Iterative reconstruction"; clim)
+p6 = jim(x, y, xhat, "Iterative reconstruction"; clim)
 
 
-# Here is a profile comparison.
+# Here is a comparison of the profiles.
 
-plot!(pp, x, real(xhat[:,N÷2]), label="Iterative edge-preserving")
+plot!(pp, x, real(xls[:,N÷2]), label="LS-CG")
+plot!(pp, x, real(xhat[:,N÷2]), label="Iterative edge-preserving", color=:black)
 
 #
 isinteractive() && prompt();
@@ -373,6 +400,15 @@ this was not an
 ([see also here](http://arxiv.org/abs/2109.08237))
 because the k-space data came from the analytical spectrum of ellipses,
 rather than from a discrete image.
+
+
+# ### Caveats
+
+* The phantom used here was real-valued, which is unrealistic
+  (although the reconstruction methods did not "know" it was real).
+* This simulation is for a single-coil scan
+  whereas modern MRI scanners generally use multiple receive coils.
+* There was no statistical noise in this simulation.
 =#
 
 
