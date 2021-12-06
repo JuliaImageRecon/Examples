@@ -2,33 +2,44 @@
 # # [NUFFT Overview](@id 1-nufft)
 #---------------------------------------------------------
 
-# This example illustrates how to use Nonuniform FFT (NUFFT)
-# for image reconstruction in MRI
-# using the Julia language.
+#=
+This example illustrates how to use Nonuniform FFT (NUFFT)
+for image reconstruction in MRI
+using the Julia language.
 
-# This entire page was generated using a single Julia file:
-# [1-nufft.jl](https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/1-nufft.jl).
-# In any such Julia documentation,
-# you can access the source code
-# using the "Edit on GitHub" link in the top right.
+This entire page was generated using a single Julia file:
+[1-nufft.jl](https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/1-nufft.jl).
+[1-nufft.jl](@__REPO_ROOT_URL__/docs/lit/mri/1-nufft.jl).
+In any such Julia documentation,
+you can access the source code
+using the "Edit on GitHub" link in the top right.
+=#
 
-# Some MRI scans use non-Cartesian sampling patterns
-# (like radial and spiral k-space trajectories, among others),
-# often in the interest of acquisition speed.
+#md # The corresponding notebook can be viewed in
+#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [`1-nufft.ipynb`](@__NBVIEWER_ROOT_URL__/generated/mri/1-nufft.ipynb),
+#md # and opened in [binder](https://mybinder.org/) here:
+#md # [`1-nufft.ipynb`](@__BINDER_ROOT_URL__/generated/mri/1-nufft.ipynb).
 
-# Image reconstruction from fully sampled Cartesian k-space data
-# typically uses simple inverse FFT operations,
-# whereas non-Cartesian sampling requires more complicated methods.
+#=
+Some MRI scans use non-Cartesian sampling patterns
+(like radial and spiral k-space trajectories, among others),
+often in the interest of acquisition speed.
 
-# The examples here illustrate both non-iterative (aka "gridding")
-# and iterative methods for non-Cartesian MRI reconstruction.
-# For simplicity the examples consider the case of single-coil data
-# and ignore the effects of B0 field inhomogeneity.
+Image reconstruction from fully sampled Cartesian k-space data
+typically uses simple inverse FFT operations,
+whereas non-Cartesian sampling requires more complicated methods.
+
+The examples here illustrate both non-iterative (aka "gridding")
+and iterative methods for non-Cartesian MRI reconstruction.
+For simplicity the examples consider the case of single-coil data
+and ignore the effects of B0 field inhomogeneity.
 
 
-# First we add the Julia packages that are need for these examples.
-# Change `false` to `true` in the following code block
-# if you are using any of the following packages for the first time.
+First we add the Julia packages that are need for these examples.
+Change `false` to `true` in the following code block
+if you are using any of the following packages for the first time.
+=#
 
 if false
     import Pkg
@@ -66,10 +77,12 @@ isinteractive() && jim(:prompt, true);
 
 # ## Radial k-space sampling
 
-# We focus on radial sampling as a simple representative non-Cartesian case.
-# Consider imaging a 256mm × 256mm field of FOV
-# with the goal of reconstructing a 128 × 128 pixel image.
-# The following radial and angular k-space sampling is reasonable.
+#=
+We focus on radial sampling as a simple representative non-Cartesian case.
+Consider imaging a 256mm × 256mm field of FOV
+with the goal of reconstructing a 128 × 128 pixel image.
+The following radial and angular k-space sampling is reasonable.
+=#
 
 N = 128
 FOV = 256mm # physical units!
@@ -90,9 +103,11 @@ plot(νx, νy,
 isinteractive() && prompt();
 
 
-# For the NUFFT routines considered here,
-# the sampling arguments must be "Ω" values:
-# digital frequencies have pseudo-units of radians / pixel.
+#=
+For the NUFFT routines considered here,
+the sampling arguments must be "Ω" values:
+digital frequencies have pseudo-units of radians / pixel.
+=#
 
 Ωx = (2π * Δx) * νx # N × Nϕ grid of k-space sample locations
 Ωy = (2π * Δx) * νy # in pseudo-units of radians / sample
@@ -113,9 +128,11 @@ isinteractive() && prompt();
 
 # ## Radial k-space data for Shepp-Logan phantom
 
-# Get the ellipse parameters for a MRI-suitable version of the Shepp-Logan phantom
-# and calculate (analytically) the radial k-space data.
-# Then display in polar coordinates.
+#=
+Get the ellipse parameters for a MRI-suitable version of the Shepp-Logan phantom
+and calculate (analytically) the radial k-space data.
+Then display in polar coordinates.
+=#
 
 object = shepp_logan(SheppLoganEmis(); fovs=(FOV,FOV))
 #object = [Gauss2(18mm, 0mm, 100mm, 70mm, 0, 1)] # useful for validating DCF
@@ -133,27 +150,31 @@ jim(kr, kϕ, abs.(data), title="k-space data magnitude",
 
 # ## Non-iterative gridding image reconstruction
 
-# It would be impossible for a radiologist
-# to diagnose a patient
-# from the k-space data in polar coordinates,
-# so image reconstruction is needed.
+#=
+It would be impossible for a radiologist
+to diagnose a patient
+from the k-space data in polar coordinates,
+so image reconstruction is needed.
 
-# The simplest approach
-# is to (nearest-neighbor) interpolate the k-space data
-# onto a Cartesian grid,
-# and then reconstruction with an inverse FFT.
+The simplest approach
+is to (nearest-neighbor) interpolate the k-space data
+onto a Cartesian grid,
+and then reconstruction with an inverse FFT.
 
-# One way to do that interpolation
-# is to use a `Histogram` method
-# in Julia's statistics package.
+One way to do that interpolation
+is to use a `Histogram` method
+in Julia's statistics package.
+=#
 
 using StatsBase: fit, Histogram, weights
 
-# The following function is a work-around because `weights` in StatsBase
-# is
-# [limited to Real data](https://github.com/JuliaStats/StatsBase.jl/issues/745),
-# so here we bin the real and imaginary k-space data separately,
-# and handle the units.
+#=
+The following function is a work-around because `weights` in StatsBase is
+[limited to Real data](https://github.com/JuliaStats/StatsBase.jl/issues/745),
+so here we bin the real and imaginary k-space data separately,
+and handle the units.
+=#
+
 function histogram(coord, vals::AbstractArray{<:Number}, edges)
     u = oneunit(eltype(vals)) 
     wr = weights(real(vec(vals / u)))
@@ -184,29 +205,33 @@ p0 = jim(x, y, ideal, title="True Shepp-Logan phantom"; clim)
 
 # ## NUFFT approach to gridding
 
-# Basic nearest-neighbor gridding
-# does not provide acceptable image quality in MRI,
-# so now we turn to using the NUFFT.
-# For MRI purposes,
-# the NUFFT is a function that maps Cartesian spaced image data
-# into non-Cartesian k-space data.
-# The
-# [NFFT.jl](https://github.com/tknopp/NFFT.jl)
-# package has functions
-# for computing the NUFFT and its adjoint.
-# These are linear mappings (generalizations of matrices),
-# so instead of calling those functions directly,
-# here we use the NUFFT linear map object
-# defined in MIRT
-# that provides a non-Cartesian Fourier encoding "matrix".
+#=
+Basic nearest-neighbor gridding
+does not provide acceptable image quality in MRI,
+so now we turn to using the NUFFT.
+For MRI purposes,
+the NUFFT is a function that maps Cartesian spaced image data
+into non-Cartesian k-space data.
+The
+[NFFT.jl](https://github.com/tknopp/NFFT.jl)
+package has functions
+for computing the NUFFT and its adjoint.
+These are linear mappings (generalizations of matrices),
+so instead of calling those functions directly,
+here we use the NUFFT linear map object
+defined in MIRT
+that provides a non-Cartesian Fourier encoding "matrix".
+=#
 
 A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2])
 
-# This linear map is constructed to map a N × N image into `length(Ωx)` k-space samples.
-# So its
-# [adjoint](https://en.wikipedia.org/wiki/Adjoint)
-# goes the other direction.
-# However, an adjoint is *not* an inverse!
+#=
+This linear map is constructed to map a N × N image into `length(Ωx)` k-space samples.
+So its
+[adjoint](https://en.wikipedia.org/wiki/Adjoint)
+goes the other direction.
+However, an adjoint is *not* an inverse!
+=#
 
 gridded2 = A' * vec(data)
 jim(x, y, gridded2, title="NUFFT gridding without DCF")
@@ -214,25 +239,27 @@ jim(x, y, gridded2, title="NUFFT gridding without DCF")
 
 # ## Density compensation
 
-# To get a decent image with NUFFT-based gridding of non-Cartesian data,
-# one must compensate for the k-space sampling density.
-# See
-# [this book chapter](https://web.eecs.umich.edu/~fessler/book/c-four.pdf)
-# for details.
+#=
+To get a decent image with NUFFT-based gridding of non-Cartesian data,
+one must compensate for the k-space sampling density.
+See
+[this book chapter](https://web.eecs.umich.edu/~fessler/book/c-four.pdf)
+for details.
 
-# Because this example uses radial sampling,
-# we can borrow ideas from tomography,
-# especially the
-# [ramp filter](https://en.wikipedia.org/wiki/Radon_transform#Radon_inversion_formula),
-# to define a reasonable density compensation function (DCF).
+Because this example uses radial sampling,
+we can borrow ideas from tomography,
+especially the
+[ramp filter](https://en.wikipedia.org/wiki/Radon_transform#Radon_inversion_formula),
+to define a reasonable density compensation function (DCF).
 
-# Here is a basic DCF version that uses the ramp filter in a simple way,
-# corresponding to the areas of annular segments
-# (Voronoi cells in polar coordinates).
-# The `dcf .* data` line uses Julia's
-# [broadcast](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
-# feature
-# to apply the 1D DCF to each radial spoke.
+Here is a basic DCF version that uses the ramp filter in a simple way,
+corresponding to the areas of annular segments
+(Voronoi cells in polar coordinates).
+The `dcf .* data` line uses Julia's
+[broadcast](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
+feature
+to apply the 1D DCF to each radial spoke.
+=#
 
 dν = 1/FOV # k-space radial sample spacing
 dcf = pi / Nϕ * dν * abs.(kr) # (N+1) weights along k-space polar coordinate 
@@ -241,11 +268,13 @@ gridded3 = A' * vec(dcf .* data)
 p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF"; clim)
 
 
-# The image is more reasonable than without any DCF,
-# but we can do better (quantitatively) using the correction of
-# [Lauzon&Rutt, 1996](http://doi.org/10.1002/mrm.1910360617)
-# and
-# [Joseph, 1998](http://doi.org/10.1002/mrm.1910400317).
+#=
+The image is more reasonable than without any DCF,
+but we can do better (quantitatively) using the correction of
+[Lauzon&Rutt, 1996](http://doi.org/10.1002/mrm.1910360617)
+and
+[Joseph, 1998](http://doi.org/10.1002/mrm.1910400317).
+=#
 
 dcf = pi / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
 dcf[kr .== 0/mm] .= pi * (dν/2)^2 / Nϕ # area of center disk
@@ -264,27 +293,29 @@ plot!(x, real(ideal[:,N÷2]), label="ideal", xlabel=L"x", ylabel="middle profile
 isinteractive() && prompt();
 
 
-# Finally we have made a NUFFT gridded image with DCF
-# that has the appropriate range of values,
-# but it still looks less than ideal.
-# So next we try an iterative approach.
+#=
+Finally we have made a NUFFT gridded image with DCF
+that has the appropriate range of values,
+but it still looks less than ideal.
+So next we try an iterative approach.
 
 
-# ## Iterative MR image reconstruction using NUFFT
+## Iterative MR image reconstruction using NUFFT
 
-# Here we would like to reconstruct an image
-# by finding the minimizer of a cost function
-# such as the following:
-# ```math
-# \arg \min_{x} \frac{1}{2} \| A x - y \|_2^2 + \beta R(x)
-# , \qquad
-# R(x) = 1' \psi.(T x).
-# ```
-# We focus here on the case of edge-preserving regularization
-# where ``T`` is a 2D finite-differencing operator
-# and ``\psi`` is a potential function.
-# This operator maps a N×N image into a N×N×2 array
-# with the horizontal and vertical finite differences.
+Here we would like to reconstruct an image
+by finding the minimizer of a cost function
+such as the following:
+```math
+\arg \min_{x} \frac{1}{2} \| A x - y \|_2^2 + \beta R(x)
+, \qquad
+R(x) = 1' \psi.(T x).
+```
+We focus here on the case of edge-preserving regularization
+where ``T`` is a 2D finite-differencing operator
+and ``\psi`` is a potential function.
+This operator maps a N×N image into a N×N×2 array
+with the horizontal and vertical finite differences.
+=#
 
 T = diffl_map((N,N), [1,2] ; T = ComplexF32)
 
@@ -293,22 +324,26 @@ T = diffl_map((N,N), [1,2] ; T = ComplexF32)
 jim(x, y, T * ideal; ncol=1, title="Horizontal and vertical finite differences")
 
 
-# ## Edge-preserving regularization
+#=
+## Edge-preserving regularization
 
-# We use the Fair potential function:
-# a rounded corner version of absolute value,
-# an approximation to anisotropic total variation (TV).
+We use the Fair potential function:
+a rounded corner version of absolute value,
+an approximation to anisotropic total variation (TV).
+=#
 
 β = 2^13 # regularization parameter
 δ = 0.05 # edge-preserving parameter
 wpot = z -> 1 / (1 + abs(z)/δ) # weighting function
 
 
-# ## Nonlinear CG algorithm
+#=
+## Nonlinear CG algorithm
 
-# We apply a (nonlinear) CG algorithm
-# to seek the minimizer of the cost function.
-# [MRI optimization survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+We apply a (nonlinear) CG algorithm
+to seek the minimizer of the cost function.
+[MRI optimization survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+=#
 
 dx = FOV / N # pixel size
 dx = dx / oneunit(dx) # abandon units for now
@@ -321,16 +356,18 @@ xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
 p5 = jim(x, y, xhat, "Iterative reconstruction"; clim)
 
 
-# In this case, iterative image reconstruction provides the best looking image.
-# One might argue this simulation was doomed to succeed,
-# because the phantom is piece-wise constant,
-# which is the best case for edge-preserving regularization.
-# On the other hand,
-# this was not an
-# [inverse crime](http://doi.org/10.1016/j.cam.2005.09.027)
-# ([see also here](http://arxiv.org/abs/2109.08237))
-# because the k-space data came from the analytical spectrum of ellipses,
-# rather than from a discrete image.
+#=
+In this case, iterative image reconstruction provides the best looking image.
+One might argue this simulation was doomed to succeed,
+because the phantom is piece-wise constant,
+which is the best case for edge-preserving regularization.
+On the other hand,
+this was not an
+[inverse crime](http://doi.org/10.1016/j.cam.2005.09.027)
+([see also here](http://arxiv.org/abs/2109.08237))
+because the k-space data came from the analytical spectrum of ellipses,
+rather than from a discrete image.
+=#
 
 
 # ## Reproducibility
