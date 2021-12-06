@@ -3,30 +3,25 @@ using Literate
 
 # https://juliadocs.github.io/Documenter.jl/stable/man/syntax/#@example-block
 ENV["GKSwstype"] = "100"
+ENV["GKS_ENCODING"] = "utf-8"
 
 # generate examples using Literate
 lit = joinpath(@__DIR__, "lit")
 src = joinpath(@__DIR__, "src")
-notebooks = joinpath(src, "notebooks")
+gen = joinpath(@__DIR__, "src/generated")
 
-ENV["GKS_ENCODING"] = "utf-8"
-
-# DocMeta.setdocmeta!(MIRTjim, :DocTestSetup, :(using MIRTjim); recursive=true)
-
-execute = true # Set to true for executing notebooks and documenter!
-nb = false # Set to true to generate the notebooks
 for (root, _, files) in walkdir(lit), file in files
-    splitext(file)[2] == ".jl" || continue
+    splitext(file)[2] == ".jl" || continue # process .jl files only
     ipath = joinpath(root, file)
-    opath = splitdir(replace(ipath, lit => src))[1]
-    Literate.markdown(ipath, opath, documenter = execute)
-    nb && Literate.notebook(ipath, notebooks, execute = execute)
+    opath = splitdir(replace(ipath, lit => gen))[1]
+    Literate.markdown(ipath, opath, documenter = execute) # run examples
+    Literate.notebook(ipath, opath; execute = false) # no-run notebooks
 end
 
 # Documentation structure
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) =
-    [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
+    [joinpath("generated/", folder, f) for f in readdir(joinpath(gen, folder)) if ismd(f)]
 
 isci = get(ENV, "CI", nothing) == "true"
 
@@ -45,6 +40,7 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "MRI" => pages("mri"),
+        "CT" => pages("ct"),
     ],
 )
 
@@ -57,5 +53,5 @@ if isci
         push_preview = true,
     )
 else
-    @warn "may need to: rm -r src/*/*"
+    @warn "may need to: rm -r src/generate/"
 end
