@@ -9,10 +9,10 @@ using the Julia language.
 
 This entire page was generated using a single Julia file:
 [1-nufft.jl](@__REPO_ROOT_URL__/mri/1-nufft.jl).
-In any such Julia documentation,
-you can access the source code
-using the "Edit on GitHub" link in the top right.
 =#
+#md # In any such Julia documentation,
+#md # you can access the source code
+#md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
 #md # [nbviewer](http://nbviewer.jupyter.org/) here:
@@ -284,9 +284,9 @@ p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF"; cli
 
 # A profile helps illustrate the improvement.
 
-plot(x, real(gridded4[:,N÷2]), label="modified ramp DCF")
-plot!(x, real(gridded3[:,N÷2]), label="basic ramp DCF")
-plot!(x, real(ideal[:,N÷2]), label="ideal", xlabel=L"x", ylabel="middle profile")
+pp = plot(x, real(gridded4[:,N÷2]), label="Modified ramp DCF")
+plot!(x, real(gridded3[:,N÷2]), label="Basic ramp DCF")
+plot!(x, real(ideal[:,N÷2]), label="Ideal", xlabel=L"x", ylabel="middle profile")
 
 #
 isinteractive() && prompt();
@@ -354,6 +354,13 @@ x0 = gridded4 # initial guess is best gridding reconstruction
 xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
 p5 = jim(x, y, xhat, "Iterative reconstruction"; clim)
 
+
+# Here is a profile comparison.
+
+plot!(pp, x, real(xhat[:,N÷2]), label="Iterative edge-preserving")
+
+#
+isinteractive() && prompt();
 
 #=
 In this case, iterative image reconstruction provides the best looking image.

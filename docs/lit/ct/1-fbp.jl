@@ -11,10 +11,10 @@ using the Julia language.
 #=
 This entire page was generated using a single Julia file:
 [1-fbp.jl](@__REPO_ROOT_URL__/ct/1-fbp.jl).
-In any such Julia documentation,
-you can access the source code
-using the "Edit on GitHub" link in the top right.
 =#
+#md # In any such Julia documentation,
+#md # you can access the source code
+#md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
 #md # [nbviewer](http://nbviewer.jupyter.org/) here:
