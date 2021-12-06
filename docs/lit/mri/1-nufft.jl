@@ -54,7 +54,7 @@ using Unitful: mm
 using UnitfulRecipes
 using LaTeXStrings
 using MIRTjim: jim, prompt
-using MIRT: Anufft, ncg
+using MIRT: Anufft, diffl_map, ncg
 using InteractiveUtils: versioninfo
 
 
@@ -287,6 +287,7 @@ isinteractive() && prompt();
 # with the horizontal and vertical finite differences.
 
 T = diffl_map((N,N), [1,2] ; T = ComplexF32)
+
 
 # Applying this operator to the ideal image illustrated its action:
 jim(x, y, T * ideal; ncol=1, title="Horizontal and vertical finite differences")
