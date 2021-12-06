@@ -28,6 +28,11 @@ and
   or [vim](https://github.com/JuliaEditorSupport/julia-vim)
   perhaps with
   [tmux](https://discourse.julialang.org/t/julia-vim-tutorial-for-newbies/36636).
+  Appropriate editor plug-ins are needed to use LaTeX-like
+  [tab-completion](https://docs.julialang.org/en/v1/stdlib/REPL/#Tab-completion)
+  of
+  [unicode](https://docs.julialang.org/en/v1/manual/unicode-input/#Unicode-Input)
+  characters like `÷ ⊗ ⊕ ∘ ×` and `α β γ`.
 
 * Peruse the reconstruction examples listed in the menu here.
   If your browser window is wide enough,
