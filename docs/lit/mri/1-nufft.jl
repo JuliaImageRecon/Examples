@@ -48,13 +48,13 @@ end
 # Now tell this Julia session to use the following packages for this example.
 # Run `Pkg.add()` in the preceding code block first, if needed.
 
-using ImagePhantoms: shepp_logan, SheppLoganToft, spectrum, phantom # Gauss2
+using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
 using Plots; default(label="", markerstrokecolor=:auto)
 using Unitful: mm
 using UnitfulRecipes
 using LaTeXStrings
 using MIRTjim: jim, prompt
-using MIRT: Anufft
+using MIRT: Anufft, ncg
 using InteractiveUtils: versioninfo
 
 
@@ -64,7 +64,7 @@ using InteractiveUtils: versioninfo
 isinteractive() && jim(:prompt, true);
 
 
-# ## Radial sampling
+# ## Radial k-space sampling
 
 # We focus on radial sampling as a simple representative non-Cartesian case.
 # Consider imaging a 256mm × 256mm field of FOV
@@ -108,7 +108,7 @@ scatter(Ωx, Ωy,
 )
 
 #
-isinteractive() && prompt()
+isinteractive() && prompt();
 
 
 # ## Radial k-space data for Shepp-Logan phantom
@@ -117,7 +117,7 @@ isinteractive() && prompt()
 # and calculate (analytically) the radial k-space data.
 # Then display in polar coordinates.
 
-object = shepp_logan(SheppLoganToft(); fovs=(FOV,FOV))
+object = shepp_logan(SheppLoganEmis(); fovs=(FOV,FOV))
 #object = [Gauss2(18mm, 0mm, 100mm, 70mm, 0, 1)] # useful for validating DCF
 data = spectrum(object).(νx,νy)
 data = data / oneunit(eltype(data)) # abandon units at this point
@@ -178,7 +178,8 @@ jim(x, y, tmp, title="Elementary gridding reconstruction")
 # Here's what the phantom should look like:
 
 ideal = phantom(x, y, object, 2)
-p0 = jim(x, y, ideal, title="True Shepp-Logan phantom")
+clim = (0, 9)
+p0 = jim(x, y, ideal, title="True Shepp-Logan phantom"; clim)
 
 
 # ## NUFFT approach to gridding
@@ -187,7 +188,7 @@ p0 = jim(x, y, ideal, title="True Shepp-Logan phantom")
 # does not provide acceptable image quality in MRI,
 # so now we turn to using the NUFFT.
 # For MRI purposes,
-# the NUFFT is function that maps Cartesian spaced image data
+# the NUFFT is a function that maps Cartesian spaced image data
 # into non-Cartesian k-space data.
 # The
 # [NFFT.jl](https://github.com/tknopp/NFFT.jl)
@@ -219,44 +220,116 @@ jim(x, y, gridded2, title="NUFFT gridding without DCF")
 # [this book chapter](https://web.eecs.umich.edu/~fessler/book/c-four.pdf)
 # for details.
 
-# Because this example is using radial sampling,
+# Because this example uses radial sampling,
 # we can borrow ideas from tomography,
-# especially the ramp filter,
+# especially the
+# [ramp filter](https://en.wikipedia.org/wiki/Radon_transform#Radon_inversion_formula),
 # to define a reasonable density compensation function (DCF).
 
-# Here is a basic DCF version that uses the ramp filter in a simple way.
-# The `dcf .* data` line uses Julia's broadcast feature
+# Here is a basic DCF version that uses the ramp filter in a simple way,
+# corresponding to the areas of annular segments
+# (Voronoi cells in polar coordinates).
+# The `dcf .* data` line uses Julia's
+# [broadcast](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
+# feature
 # to apply the 1D DCF to each radial spoke.
 
-dcf = abs.(kr) # (N+1) weights along k-space polar coordinate 
+dν = 1/FOV # k-space radial sample spacing
+dcf = pi / Nϕ * dν * abs.(kr) # (N+1) weights along k-space polar coordinate 
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded3 = A' * vec(dcf .* data)
-p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF")
+p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF"; clim)
 
 
 # The image is more reasonable than without any DCF,
-# but we can do better using the correction of
+# but we can do better (quantitatively) using the correction of
 # [Lauzon&Rutt, 1996](http://doi.org/10.1002/mrm.1910360617)
 # and
 # [Joseph, 1998](http://doi.org/10.1002/mrm.1910400317).
 
-dν = 1/FOV # k-space radial sample spacing
 dcf = pi / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
-dcf[kr .== 0] .= pi * (dν/2)^2 / Nϕ # area of center disk
+dcf[kr .== 0/mm] .= pi * (dν/2)^2 / Nϕ # area of center disk
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded4 = A' * vec(dcf .* data)
-p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF")
+p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF"; clim)
 
 
-# Finally we have a NUFFT gridded image with DCF
+# A profile helps illustrate the improvement.
+
+plot(x, real(gridded4[:,N÷2]), label="modified ramp DCF")
+plot!(x, real(gridded3[:,N÷2]), label="basic ramp DCF")
+plot!(x, real(ideal[:,N÷2]), label="ideal", xlabel=L"x", ylabel="middle profile")
+
+#
+isinteractive() && prompt();
+
+
+# Finally we have made a NUFFT gridded image with DCF
 # that has the appropriate range of values,
 # but it still looks less than ideal.
 # So next we try an iterative approach.
 
 
-# ## Iterative MR image reconstruction using an NUFFT.
+# ## Iterative MR image reconstruction using NUFFT
 
-# todo
+# Here we would like to reconstruct an image
+# by finding the minimizer of a cost function
+# such as the following:
+# ```math
+# \arg \min_{x} \frac{1}{2} \| A x - y \|_2^2 + \beta R(x)
+# , \qquad
+# R(x) = 1' \psi.(T x).
+# ```
+# We focus here on the case of edge-preserving regularization
+# where ``T`` is a 2D finite-differencing operator
+# and ``\psi`` is a potential function.
+# This operator maps a N×N image into a N×N×2 array
+# with the horizontal and vertical finite differences.
+
+T = diffl_map((N,N), [1,2] ; T = ComplexF32)
+
+# Applying this operator to the ideal image illustrated its action:
+jim(x, y, T * ideal; ncol=1, title="Horizontal and vertical finite differences")
+
+
+# ## Edge-preserving regularization
+
+# We use the Fair potential function:
+# a rounded corner version of absolute value,
+# an approximation to anisotropic total variation (TV).
+
+β = 2^13 # regularization parameter
+δ = 0.05 # edge-preserving parameter
+wpot = z -> 1 / (1 + abs(z)/δ) # weighting function
+
+
+# ## Nonlinear CG algorithm
+
+# We apply a (nonlinear) CG algorithm
+# to seek the minimizer of the cost function.
+# [MRI optimization survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+
+dx = FOV / N # pixel size
+dx = dx / oneunit(dx) # abandon units for now
+B = [A, T] # see MIRT.ncg
+gradf = [u -> u - vec(data/dx^2), # data-term gradient, correct for pixel area
+         u -> β * (u .* wpot.(u))] # regularizer gradient
+curvf = [u -> 1, u -> β] # curvature of quadratic majorizers
+x0 = gridded4 # initial guess is best gridding reconstruction
+xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
+p5 = jim(x, y, xhat, "Iterative reconstruction"; clim)
+
+
+# In this case, iterative image reconstruction provides the best looking image.
+# One might argue this simulation was doomed to succeed,
+# because the phantom is piece-wise constant,
+# which is the best case for edge-preserving regularization.
+# On the other hand,
+# this was not an
+# [inverse crime](http://doi.org/10.1016/j.cam.2005.09.027)
+# ([see also here](http://arxiv.org/abs/2109.08237))
+# because the k-space data came from the analytical spectrum of ellipses,
+# rather than from a discrete image.
 
 
 # ## Reproducibility
@@ -270,5 +343,4 @@ split(String(take!(io)), '\n')
 
 # And with the following package versions
 
-import Pkg
-Pkg.status()
+import Pkg; Pkg.status()
