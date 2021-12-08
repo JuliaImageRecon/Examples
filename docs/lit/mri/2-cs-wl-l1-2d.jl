@@ -46,7 +46,7 @@ using InteractiveUtils: versioninfo
 isinteractive() && jim(:prompt, true);
 
 
-# ### Create (synthetic) data
+# ## Create (synthetic) data
 
 # Shepp-Logan phantom (unrealistic because real-valued):
 nx,ny = 192,256
@@ -79,9 +79,11 @@ jim(logger(embed(ytrue,samp)), fft0=true, title="k-space |data| (zero-filled)",
     xlabel="kx", ylabel="ky")
 
 
-# ### Prepare to reconstruct
-# Creating a system matrix (encoding matrix) and an initial image  
-# The system matrix is a `LinearMapAA` object, akin to a `fatrix` in Matlab MIRT.
+#=
+## Prepare to reconstruct
+Creating a system matrix (encoding matrix) and an initial image  
+The system matrix is a `LinearMapAA` object, akin to a `fatrix` in Matlab MIRT.
+=#
 
 # System model ("encoding matrix") from MIRT:
 F = Afft(samp) # operator!
@@ -93,7 +95,7 @@ jim(X0, "|X0|: initial image; NRMSE $(nrmse(X0))%")
 
 
 #=
-### Wavelet sparsity in synthesis form
+## Wavelet sparsity in synthesis form
 
 The image reconstruction optimization problem here is
 ```math
@@ -138,9 +140,13 @@ z0 = W * X0
 jim(z0, "Initial wavelet coefficients")
 
 
-# #### Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart
-# See [Kim & Fessler, 2018](http://doi.org/10.1007/s10957-018-1287-4)
-# for adaptive restart algorithm details.
+#=
+## Iterate
+
+Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart
+See [Kim & Fessler, 2018](http://doi.org/10.1007/s10957-018-1287-4)
+for adaptive restart algorithm details.
+=#
 
 # Functions for tracking progress:
 function fun_ista(iter, xk_z, yk, is_restart)
@@ -176,6 +182,8 @@ jim(
 )
 #src savefig("xpogm_odwt.pdf")
 
+
+# ## POGM is fastest
 
 # Plot cost function vs iteration:
 cost_ista = [out_ista[k][1] for k=1:niter+1]
