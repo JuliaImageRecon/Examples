@@ -1,5 +1,5 @@
 #---------------------------------------------------------
-# # [2D dynamic](@id 3-2d+t)
+# # [2D dynamic](@id 3-2d-t)
 #---------------------------------------------------------
 
 #src 2019-06-13, Jeff Fessler
@@ -16,7 +16,7 @@ with temporal "TV" regularizer (corner-rounded)
 using the Julia language.
 
 This entire page was generated using a single Julia file:
-[3-2d+t.jl](@__REPO_ROOT_URL__/mri/3-2d+t.jl).
+[3-2d-t.jl](@__REPO_ROOT_URL__/mri/3-2d-t.jl).
 =#
 #md # In any such Julia documentation,
 #md # you can access the source code
@@ -24,9 +24,9 @@ This entire page was generated using a single Julia file:
 
 #md # The corresponding notebook can be viewed in
 #md # [nbviewer](http://nbviewer.jupyter.org/) here:
-#md # [`3-2d+t.ipynb`](@__NBVIEWER_ROOT_URL__/mri/3-2d+t.ipynb),
+#md # [`3-2d-t.ipynb`](@__NBVIEWER_ROOT_URL__/mri/3-2d-t.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
-#md # [`3-2d+t.ipynb`](@__BINDER_ROOT_URL__/mri/3-2d+t.ipynb).
+#md # [`3-2d-t.ipynb`](@__BINDER_ROOT_URL__/mri/3-2d-t.ipynb).
 
 using ImageGeoms: ImageGeom
 using ImagePhantoms: shepp_logan, SouthPark, phantom, Ellipse
