@@ -16,18 +16,18 @@ base = "JuliaImageRecon/Examples"
 repo_root_url =
     "https://github.com/$base/blob/main/docs/lit"
 nbviewer_root_url =
-	"https://nbviewer.org/github/$base/tree/gh-pages/generated"
+    "https://nbviewer.org/github/$base/tree/gh-pages/generated"
 binder_root_url =
-	"https://mybinder.org/v2/gh/$base/gh-pages?filepath=generated"
+    "https://mybinder.org/v2/gh/$base/gh-pages?filepath=generated"
 
 for (root, _, files) in walkdir(lit), file in files
     splitext(file)[2] == ".jl" || continue # process .jl files only
     ipath = joinpath(root, file)
     opath = splitdir(replace(ipath, lit => gen))[1]
     Literate.markdown(ipath, opath, documenter = execute; # run examples
-		repo_root_url, nbviewer_root_url, binder_root_url)
+        repo_root_url, nbviewer_root_url, binder_root_url)
     Literate.notebook(ipath, opath; execute = false, # no-run notebooks
-		repo_root_url, nbviewer_root_url, binder_root_url)
+        repo_root_url, nbviewer_root_url, binder_root_url)
 end
 
 
@@ -66,5 +66,5 @@ if isci
         push_preview = true,
     )
 else
-    @warn "may need to: rm -r src/generate/"
+    @warn "may need to: rm -r src/generated/"
 end
