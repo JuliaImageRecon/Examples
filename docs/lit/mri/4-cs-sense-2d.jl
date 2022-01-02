@@ -10,39 +10,44 @@ for parallel MRI (sensitivity encoding)
 with 1-norm regularization of orthogonal wavelet coefficients,
 using the Julia language.
 
-This entire page was generated using a single Julia file:
+This page was generated using a single Julia file:
 [4-cs-sense-2d.jl](@__REPO_ROOT_URL__/mri/4-cs-sense-2d.jl).
 =#
+
 #md # In any such Julia documentation,
 #md # you can access the source code
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
 #md # [nbviewer](http://nbviewer.jupyter.org/) here:
-#md # [`2-cs-sense-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/2-cs-sense-2d.ipynb),
+#md # [`4-cs-sense-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/4-cs-sense-2d.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
-#md # [`2-cs-sense-2d.ipynb`](@__BINDER_ROOT_URL__/mri/2-cs-sense-2d.ipynb).
+#md # [`4-cs-sense-2d.ipynb`](@__BINDER_ROOT_URL__/mri/4-cs-sense-2d.ipynb).
 
 #=
 This demo is somewhat similar to Fig. 3 in the survey paper
 "[Optimization methods for MR image reconstruction](http://doi.org/10.1109/MSP.2019.2943645),"
 in Jan 2020 IEEE Signal Processing Magazine,
-except that the sampling is 1D phase encoding instead of 2D
-and there are multiple coils.
+except
+* the sampling is 1D phase encoding instead of 2D,
+* there are multiple coils,
+* the simulation avoids inverse crimes.
 =#
 
 # Packages used in this demo (run `Pkg.add` as needed):
-using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom
-using ImageFiltering: imfilter, centered
-using ImageMorphology: dilate, label_components # imfill
+using ImagePhantoms: ellipse_parameters, SheppLoganBrainWeb, Ellipse, phantom
+using ImagePhantoms: mri_smap_fit, mri_spectra
+#using ImageFiltering: imfilter, centered
+using ImageMorphology: dilate #, label_components # imfill
 using LazyGrids: ndgrid
-using MIRT: embed, Afft, Aodwt
+using ImageGeoms: embed, embed!
+using MIRT: Afft, Aodwt
 using MIRTjim: jim, prompt
 using MIRT: ir_mri_sensemap_sim
 using MIRT: pogm_restart
 using LinearAlgebra: norm
 using Plots; default(markerstrokecolor=:auto, label="")
-using FFTW: fft
+using FFTW: fft, fftshift
 using Random: seed!
 using InteractiveUtils: versioninfo
 
@@ -53,118 +58,152 @@ using InteractiveUtils: versioninfo
 isinteractive() && jim(:prompt, true);
 
 
-# ## Create (synthetic) data
+# ### Create (synthetic) data
 
-# Shepp-Logan phantom (unrealistic because real-valued):
-nx,ny = 192,256
-object = shepp_logan(SheppLoganEmis(); fovs=(ny,ny))
-Xtrue = phantom(-(nx÷2):(nx÷2-1), -(ny÷2):(ny÷2-1), object, 2)
-Xtrue = reverse(Xtrue, dims=2)
-clim = (0,9)
-jim(Xtrue, "true image"; clim)
-#src savefig("xtrue.pdf")
+# Image geometry:
+
+fovs = (256, 256)
+nx, ny = (192, 256)
+dx, dy = fovs ./ (nx,ny)
+x = (-(nx÷2):(nx÷2-1)) * dx
+y = (-(ny÷2):(ny÷2-1)) * dy
 
 
-# Somewhat random 1D phase-encode sampling:
-seed!(0); sampfrac = 0.2; samp = rand(ny) .< sampfrac; sig = 1
-mod2 = (N) -> mod.((0:N-1) .+ Int(N/2), N) .- Int(N/2)
-samp .|= (abs.(mod2(ny)) .< Int(ny/8)) # fully sampled center rows
-samp = trues(nx) * samp'
-jim(samp, fft0=true, title="k-space sampling ($(100count(samp)/(nx*ny))%)")
-#src savefig(p1, "samp.pdf")
+# Modified Shepp-Logan phantom with random complex phases
+object = ellipse_parameters(SheppLoganBrainWeb() ; disjoint=true, fovs)
+seed!(0)
+object[:,end] = [1; randn(ComplexF32, 9)] # random phases
+object = Ellipse(object)
+oversample = 3
+Xtrue = phantom(x, y, object, oversample)
+#Xtrue = reverse(Xtrue, dims=2)
+cfun = z -> cat(dims = ndims(z)+1, real(z), imag(z))
+#clim = (0,9)
+jim(x, y, cfun(Xtrue), "True image\n real | imag"; ncol=1)
+
+
+# Mask (support for image reconstruction)
+
+mask = abs.(Xtrue) .> 0
+mask = dilate(dilate(dilate(mask))) # dilate twice with 3×3 square
+@assert mask .* Xtrue == Xtrue
+jim(x, y, mask + abs.(Xtrue), "Mask + |Xtrue|")
 
 
 # Make sensitivity maps, normalized so SSoS = 1:
 ncoil = 4
 smap = ir_mri_sensemap_sim(dims=(nx,ny), ncoil=ncoil, orbit_start=[45])
-p1 = jim(smap, "Sensitivity maps raw");
+p1 = jim(x, y, smap, "Sensitivity maps raw");
 
 ssos = sqrt.(sum(abs.(smap).^2, dims=ndims(smap))) # SSoS
 ssos = selectdim(ssos, ndims(smap), 1)
-p2 = jim(ssos, "SSoS for ncoil=$ncoil");
+p2 = jim(x, y, ssos, "SSoS for ncoil=$ncoil");
 
 for ic=1:ncoil
     selectdim(smap, ndims(smap), ic) ./= ssos
 end
-p3 = jim(smap, "Sensitivity maps");
-
+smap .*= mask
 ssos = sqrt.(sum(abs.(smap).^2, dims=ndims(smap))) # SSoS
-@assert all(isapprox.(ssos,1))
+stacker = x -> [(@view x[:,:,i]) for i=1:size(x,3)]
+smaps = stacker(smap)
+p3 = jim(x, y, smaps, "Sensitivity maps normalized");
 jim(p1, p2, p3)
+
+
+# Frequency sample vectors:
+fx = (-(nx÷2):(nx÷2-1)) / (nx*dx) # crucial to match `mri_smap_basis` internals!
+fy = (-(ny÷2):(ny÷2-1)) / (ny*dy)
+gx, gy = ndgrid(fx, fy);
+
+# Somewhat random 1D phase-encode sampling:
+seed!(0); sampfrac = 0.4; samp = rand(ny÷2) .< sampfrac; sig = 1
+tmp = rand(ny÷2) .< 0.5; samp = [samp .* tmp; reverse(samp .* .!tmp)] # symmetry
+samp .|= (abs.(fy*dy) .< 1/8) # fully sampled center ±1/8 phase-encodes
+ny_count = count(samp)
+samp = trues(nx) * samp'
+samp_frac = round(100*count(samp) / (nx*ny), digits=2)
+jim(fx, fy, samp, title="k-space sampling ($ny_count / $ny = $samp_frac%)")
+#src jim(samp + 1*reverse(samp), fft0=true) # check symmetry
+
 
 # To avoid an inverse crime, here we use the 2012 method of
 # [Guerquin-Kern et al.](http://doi.org/10.1109/TMI.2011.2174158)
 # and use the analytical k-space values of the phantom
 # combined with an analytical model for the sensitivity maps.
 
-mask = abs.(Xtrue) .> 0
-mask = dilate(dilate(mask)) # dilate twice with 3×3 square
-tmp = label_components(mask)
-mask = tmp
-#mask = .!(imfill(.!(mask)))
-#mask = .!(imfill(convert(Matrix{Bool}, .!(mask)))
-#mask2 = imfilter(mask, centered(ones(Int32,5,5))) .> 0 # dilate
-#@assert mask2 == mask
-jim(mask)
-throw(3)
+kmax = 7
+fit = mri_smap_fit(smaps, embed; mask, kmax, deltas=(dx,dy))
+jimf(args...; kwargs...) = jim(args...; prompt=false, kwargs...)
+jim(
+ jimf(x, y, cfun(smaps), "Original maps"; clim=(-1,1), nrow=4),
+ jimf(x, y, cfun(fit.smaps), "Fit maps"; clim=(-1,1), nrow=4),
+ jimf(x, y, cfun(100 * (fit.smaps - smaps)), "error * 100"; nrow=4),
+)
 
-function dft_basis_mask(
-	mask::AbstractArray{Bool,D};
-	Kmax::Int = 5,
-    kt::NTuple{D, UnitRange{<:Integer}} = ntuple(i -> -Kmax:Kmax, D),
-    ki::CartesianIndices{D} = CartesianIndices(kt),
-#   kx::AbstractVector{Int} = -Kmax:Kmax,
-#   ky::AbstractVector{Int} = kx,
-) where D
-    basis1 = (k,N) -> exp.(-2im * π * (-(N÷2):(N÷2-1))/N*k) # 1D DFT basis
-#   basis2 = (kx,ky) -> (basis1(kx,nx) * transpose(basis1(kx,nx)))[mask] # 2D
-#src todo: think about how to generalize to N-D
+# Analytical spectra computation for complex phantom using all smaps
+# (no inverse crime here):
+ytrue = mri_spectra(gx[samp], gy[samp], object, fit)
+ytrue = hcat(ytrue...)
 
-#   B = zeros(ComplexF32, count(mask), (2Kmax+1)^2)
-    B = zeros(ComplexF32, count(mask), length(ki))
-#   for ix=1:length(kx), iy=1:length(ky)
-    for (ii, k) in enumerate(ki)
-#       B[:,(iy-1)+ix] = basis2(kx[ix], ky[iy])
-        tmp = ndgrid([basis1(k[d], size(mask,d)) for d = 1:D]...)
-        tmp = vec(.*(tmp...))
-        B[:,ii] = tmp
-    end
-	return B
-end
-
-
-Kmax = 7
-B = dft_basis_mask(mask ; Kmax)
-throw(8)
-coefs = [B \ selectdim(smap, ndims(smap), ic)[mask] for ic=1:Ncoil]
-
-
-#todo Xtrue = spectrum(-(nx÷2):(nx÷2-1), -(ny÷2):(ny÷2-1), object, 2)
-
-xx
-#todo Xtrue = spectrum(-(nx÷2):(nx÷2-1), -(ny÷2):(ny÷2-1), object, 2)
-
-# Generate noisy, under-sampled k-space data (inverse-crime simulation):
-ytrue = fft(Xtrue)[samp]
-y = ytrue + sig * √(2) * randn(ComplexF32, size(ytrue)) # complex noise!
-y = ComplexF32.(y) # save memory
-ysnr = 20 * log10(norm(ytrue) / norm(y-ytrue)) # data SNR in dB
+# Noisy under-sampled k-space data:
+ydata = ytrue + sig * √(2) * randn(ComplexF32, size(ytrue)) # complex noise!
+ydata = ComplexF32.(ydata) # save memory
+ysnr = 20 * log10(norm(ytrue) / norm(ydata - ytrue)) # data SNR in dB
 
 # Display zero-filled data:
 logger = (x; min=-6) -> log10.(max.(abs.(x) / maximum(abs, x), (10.)^min))
 jim(:abswarn, false) # suppress warnings about showing magnitude
-jim(logger(embed(ytrue,samp)), fft0=true, title="k-space |data| (zero-filled)",
-    xlabel="kx", ylabel="ky")
+jim(fx, fy, logger(embed(ytrue[:,1],samp)),
+    title="k-space |data| (zero-filled, coil 1)",
+    xlabel="νx", ylabel="νy")
 
 
 #=
-## Prepare to reconstruct
+### Prepare to reconstruct
 Creating a system matrix (encoding matrix) and an initial image  
 The system matrix is a `LinearMapAA` object, akin to a `fatrix` in Matlab MIRT.
 =#
 
-# System model ("encoding matrix") from MIRT:
+# System model ("encoding matrix") for 2D image `x` being mapped
+# to array of size `count(samp) × ncoil` k-space data
+
+# todo: this needs a lot of work.
+# should have high-level "Asense" that can wrap around Afft or Anufft
+# each of which having its own in-place work, with tests.
+
+function Asense(samp, smaps)
+    dims = size(smaps[1])
+    N = prod(dims)
+    work1 = Array{ComplexF32}(undef, dims)
+    work2 = Array{ComplexF32}(undef, dims)
+    ncoil = length(smaps)
+    function forw!(y,x)
+        for ic = 1:ncoil
+            work1 .= x .* smaps[ic]
+            fft!(work2, work1)
+            y[:,ic] .= work2[samp]
+        end
+    end
+    function back!(x,y)
+        for ic = 1:ncoil
+            embed!(work1, y[:,ic])
+            ifft!(work2, work1)
+            copyto!(work1, smaps[ic])
+            conj!(work1)
+            if ic == 1
+                @. x = work1 * work2 * N
+            else
+                @. x += work1 * work2 * N
+            end
+        end
+    end
+    A = LinearMapAO(forw!, back!, (ncoil*count(samp), N);
+        odim = (ncoil,count(samp)), idim=dims, T=ComplexF32)
+    return A
+end
+
 F = Afft(samp) # operator!
+throw(0)
 
 # Initial image based on zero-filled reconstruction:
 nrmse = (x) -> round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
