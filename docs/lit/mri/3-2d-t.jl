@@ -29,7 +29,7 @@ This entire page was generated using a single Julia file:
 #md # [`3-2d-t.ipynb`](@__BINDER_ROOT_URL__/mri/3-2d-t.ipynb).
 
 using ImageGeoms: ImageGeom
-using ImagePhantoms: shepp_logan, SouthPark, phantom, Ellipse
+using ImagePhantoms: shepp_logan, SouthPark, phantom, ellipse
 using MIRTjim: jim, prompt
 using MIRT: Anufft, diffl_map, ncg
 using MIRT: ir_mri_sensemap_sim, ir_mri_kspace_ga_radial
@@ -62,7 +62,7 @@ for it=1:nt
     tmp = copy(object0)
     width2 = 15 + 5 * sin(2*pi*it/nt) # mouth open/close
     mouth = tmp[2]
-    tmp[2] = Ellipse(mouth.center, (mouth.width[1], width2), mouth.angle[1], mouth.value)
+    tmp[2] = ellipse(mouth.center, (mouth.width[1], width2), mouth.angle[1], mouth.value)
     objects[it] = tmp
     xtrue[:,:,it] = phantom(axes(ig)..., tmp, 4)
 end
