@@ -31,6 +31,7 @@ in Jan 2020 IEEE Signal Processing Magazine,
 except
 * the sampling is 1D phase encoding instead of 2D,
 * there are multiple coils,
+* we use units # todo
 * the simulation avoids inverse crimes.
 =#
 
@@ -45,14 +46,15 @@ using MIRT: Aodwt # todo Asense
 using MIRTjim: jim, prompt
 using MIRT: ir_mri_sensemap_sim
 using MIRT: pogm_restart
-using LinearAlgebra: norm
+using LinearAlgebra: norm, dot
 using LinearMapsAA: LinearMapAA
 using Plots; default(markerstrokecolor=:auto, label="")
-using FFTW: fft!, ifft!, fftshift!
+using FFTW: fft!, bfft!, fftshift!
 using Random: seed!
+using Unitful: mm
 using InteractiveUtils: versioninfo
 
-if !@isdefined(ydata) || false # todo remove
+if !@isdefined(ydata) || true # false # todo remove
 
 # The following line is helpful when running this jl-file as a script;
 # this way it will prompt user to hit a key after each image is displayed.
@@ -64,7 +66,7 @@ isinteractive() && jim(:prompt, true);
 
 # Image geometry:
 
-fovs = (256, 256)
+fovs = (256, 256) .* 1mm # todo: units!
 nx, ny = (192, 256)
 dx, dy = fovs ./ (nx,ny)
 x = (-(nx÷2):(nx÷2-1)) * dx
@@ -76,7 +78,8 @@ object = ellipse_parameters(SheppLoganBrainWeb() ; disjoint=true, fovs)
 seed!(0)
 object = vcat( (object[1][1:end-1]..., 1), # random phases
     [(ob[1:end-1]..., randn(ComplexF32)) for ob in object[2:end]]...)
-object = ellipse(object)
+# object = ellipse(object)
+object = ellipse([object[1]]) # todo: simplify
 oversample = 3
 Xtrue = phantom(x, y, object, oversample)
 cfun = z -> cat(dims = ndims(z)+1, real(z), imag(z))
@@ -95,21 +98,19 @@ jim(x, y, mask + abs.(Xtrue), "Mask + |Xtrue|")
 
 # Make sensitivity maps, normalized so SSoS = 1:
 ncoil = 4
-smap = ir_mri_sensemap_sim(dims=(nx,ny); ncoil, orbit_start=[45])
+smap_raw = ir_mri_sensemap_sim(dims=(nx,ny); ncoil, orbit_start=[45])
 jif(args...; kwargs...) = jim(args...; prompt=false, kwargs...)
-p1 = jif(x, y, smap, "Sensitivity maps raw");
+p1 = jif(x, y, smap_raw, "Sensitivity maps raw");
 
-ssos = sqrt.(sum(abs2, smap; dims=ndims(smap))) # SSoS
-ssos = selectdim(ssos, ndims(smap), 1)
-p2 = jif(x, y, ssos, "SSoS for ncoil=$ncoil");
+sum_last = (f, x) -> selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
+ssos_fun = smap -> sqrt.(sum_last(abs2, smap)) # SSoS
+ssos_raw = ssos_fun(smap_raw) # SSoS raw
+p2 = jif(x, y, ssos_raw, "SSoS raw, ncoil=$ncoil");
 
-for ic in 1:ncoil
-    selectdim(smap, ndims(smap), ic) ./= ssos
-end
-smap .*= mask
-ssos = sqrt.(sum(abs2, smap; dims=ndims(smap))) # SSoS
-stacker = x -> [(@view x[:,:,i]) for i in 1:size(x,3)]
-smaps = stacker(smap)
+smap = @. smap_raw / ssos_raw * mask # normalize and mask
+ssos = ssos_fun(smap) # SSoS
+@assert all(≈(1), @view ssos[mask]) # verify ≈ 1
+smaps = [eachslice(smap; dims = ndims(smap))...] # stack
 p3 = jif(x, y, smaps, "|Sensitivity maps normalized|")
 p4 = jif(x, y, map(x -> angle.(x), smaps), "∠Sensitivity maps"; color=:hsv)
 jim(p1, p2, p3, p4)
@@ -172,6 +173,7 @@ jim(
 
 end # ydata
 
+
 #=
 ### Prepare to reconstruct
 Creating a system matrix (encoding matrix) and an initial image.
@@ -193,24 +195,24 @@ function Asense(samp, smaps)
     work1 = Array{ComplexF32}(undef, dims)
     work2 = Array{ComplexF32}(undef, dims)
     ncoil = length(smaps)
-    function forw!(y,x)
+    function forw!(y, x)
         for ic in 1:ncoil
             @. work1 = x * smaps[ic]
             fftshift!(work1, fft!(fftshift!(work2, work1)))
             y[:,ic] .= work1[samp]
         end
     end
-    function back!(x,y)
+    function back!(x, y)
         for ic in 1:ncoil
             embed!(work1, (@view y[:,ic]), samp)
-#           ifft!(work2, work1)
-            fftshift!(work1, ifft!(fftshift!(work2, work1)))
+#           bfft!(work2, work1)
+            fftshift!(work1, bfft!(fftshift!(work2, work1)))
             copyto!(work2, smaps[ic])
             conj!(work2)
             if ic == 1
-                @. x = work1 * work2 * N
+                @. x = work1 * work2
             else
-                @. x += work1 * work2 * N
+                @. x += work1 * work2
             end
         end
     end
@@ -219,26 +221,37 @@ function Asense(samp, smaps)
     return A
 end
 
-A = Asense(samp, smaps) # operator!
+#=
+The `dx * dy` factor here is required
+because the true k-space data `ytrue`
+comes from an analytical Fourier transform
+but the reconstruction uses a discrete Fourier transform.
+=#
+A = Asense(samp, smaps) * (dx * dy) # operator!
 
+# validate adjoint
+if false
+    tmp1 = randn(ComplexF32, A._idim)
+    tmp2 = randn(ComplexF32, A._odim)
+    @assert isapprox(dot(tmp2, A * tmp1), dot(A' * tmp2, tmp1); rtol=1e-4)
+end
+
+# Compare the analytical k-space data with the discrete modeled k-space data
 y0 = embed(ytrue, samp)
 y1 = embed(A * Xtrue, samp)
 jim(
- jif(logger(y0; up=maximum(abs,y0))),
- jif(logger(y1; up=maximum(abs,y0))),
- jif(logger(y1 - y0; up=maximum(abs,y0))),
+ jif(logger(y0; up=maximum(abs,y0)), "analytical"; clim=(-6,0)),
+ jif(logger(y1; up=maximum(abs,y0)), "discrete"; clim=(-6,0)),
+ jif(logger(y1 - y0; up=maximum(abs,y0)), "difference"),
 )
+# norm(y1) / norm(y0) # scale factor is ≈1
 
-#src # test adjoint
-#src xt = randn(ComplexF32, A._idim)
-#src yt = randn(ComplexF32, A._odim)
-#src vec(yt)' * vec(A * xt) ≈ conj(vec(xt)' * vec(A' * yt))
-
-# Initial image based on zero-filled reconstruction:
+# Initial image based on zero-filled reconstruction.
+# Note the `dx*dy` scale factor here!
 nrmse = (x) -> round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
-X0 = 1.0f0/(nx*ny) * (A' * ydata)
+X0 = 1.0f0/(nx*ny) * (A' * ydata) / (dx*dy)^2
 jim(x, y, X0, "|X0|: initial image; NRMSE $(nrmse(X0))%")
-throw() # todo 33% error for noiseless fully sampled - seems too high !?
+throw()
 
 
 #=
