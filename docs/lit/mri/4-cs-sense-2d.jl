@@ -52,7 +52,7 @@ using FFTW: fft!, ifft!, fftshift!
 using Random: seed!
 using InteractiveUtils: versioninfo
 
-if !@isdefined(ydata) || false
+if !@isdefined(ydata) || false # todo remove
 
 # The following line is helpful when running this jl-file as a script;
 # this way it will prompt user to hit a key after each image is displayed.
@@ -71,7 +71,7 @@ x = (-(nx÷2):(nx÷2-1)) * dx
 y = (-(ny÷2):(ny÷2-1)) * dy
 
 
-# Modified Shepp-Logan phantom with random complex phases
+# Modified Shepp-Logan phantom with random complex phases per ellipse
 object = ellipse_parameters(SheppLoganBrainWeb() ; disjoint=true, fovs)
 seed!(0)
 object = vcat( (object[1][1:end-1]..., 1), # random phases
@@ -110,8 +110,9 @@ smap .*= mask
 ssos = sqrt.(sum(abs2, smap; dims=ndims(smap))) # SSoS
 stacker = x -> [(@view x[:,:,i]) for i in 1:size(x,3)]
 smaps = stacker(smap)
-p3 = jif(x, y, smaps, "Sensitivity maps normalized")
-jim(p1, p2, p3)
+p3 = jif(x, y, smaps, "|Sensitivity maps normalized|")
+p4 = jif(x, y, map(x -> angle.(x), smaps), "∠Sensitivity maps"; color=:hsv)
+jim(p1, p2, p3, p4)
 
 
 # Frequency sample vectors:
@@ -123,6 +124,7 @@ gx, gy = ndgrid(fx, fy);
 seed!(0); sampfrac = 0.4; samp = rand(ny÷2) .< sampfrac
 tmp = rand(ny÷2) .< 0.5; samp = [samp .* tmp; reverse(samp .* .!tmp)] # symmetry
 samp .|= (abs.(fy*dy) .< 1/8) # fully sampled center ±1/8 phase-encodes
+samp = trues(ny) # todo: temp full sampling
 ny_count = count(samp)
 samp = trues(nx) * samp'
 samp_frac = round(100*count(samp) / (nx*ny), digits=2)
@@ -159,16 +161,23 @@ ysnr = 20 * log10(norm(ytrue) / norm(ydata - ytrue)) # data SNR in dB
 # Display zero-filled data:
 logger = (x; min=-6, up=maximum(abs,x)) -> log10.(max.(abs.(x) / up, (10.)^min))
 jim(:abswarn, false) # suppress warnings about showing magnitude
-jim(fx, fy, logger(embed(ytrue[:,1],samp)),
+tmp = embed(ytrue[:,1],samp)
+jim(
+ jif(fx, fy, logger(tmp),
     title="k-space |data| (zero-filled, coil 1)",
-    xlabel="νx", ylabel="νy")
+    xlabel="νx", ylabel="νy"),
+ jif(fx, fy, angle.(tmp),
+    title="∠data, coil 1"; color=:hsv)
+)
 
 end # ydata
 
 #=
 ### Prepare to reconstruct
-Creating a system matrix (encoding matrix) and an initial image  
-The system matrix is a `LinearMapAA` object, akin to a `fatrix` in Matlab MIRT.
+Creating a system matrix (encoding matrix) and an initial image.
+
+The system matrix is a `LinearMapAA` object,
+akin to a `fatrix` in Matlab MIRT.
 =#
 
 # System model ("encoding matrix") for 2D image `x` being mapped
@@ -229,6 +238,7 @@ jim(
 nrmse = (x) -> round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
 X0 = 1.0f0/(nx*ny) * (A' * ydata)
 jim(x, y, X0, "|X0|: initial image; NRMSE $(nrmse(X0))%")
+throw() # todo 33% error for noiseless fully sampled - seems too high !?
 
 
 #=
