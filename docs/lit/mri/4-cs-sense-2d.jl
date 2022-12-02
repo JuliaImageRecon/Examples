@@ -51,7 +51,7 @@ using LinearMapsAA: LinearMapAA
 using Plots; default(markerstrokecolor=:auto, label="")
 using FFTW: fft!, bfft!, fftshift!
 using Random: seed!
-#using Unitful: mm
+#src using Unitful: mm
 using InteractiveUtils: versioninfo
 
 
@@ -90,7 +90,7 @@ jim(x, y, cfun(Xtrue), "True image\n real | imag"; ncol=2)
 # Mask (support for image reconstruction)
 
 mask = abs.(Xtrue) .> 0
-mask = dilate(dilate(dilate(mask))) # dilate twice with 3×3 square
+mask = dilate(dilate(dilate(mask))) # repeated dilate with 3×3 square
 @assert mask .* Xtrue == Xtrue
 jim(x, y, mask + abs.(Xtrue), "Mask + |Xtrue|")
 
