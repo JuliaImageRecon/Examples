@@ -34,9 +34,8 @@ if false
     import Pkg
     Pkg.add([
         "ImagePhantoms"
-        "Plots"
         "Unitful"
-        "UnitfulRecipes"
+        "Plots"
         "LaTeXStrings"
         "MIRTjim"
         "MIRT"
@@ -51,9 +50,8 @@ end
 
 #=
 using ImagePhantoms: shepp_logan, SheppLogan, radon, phantom
-using Plots; default(label="", markerstrokecolor=:auto)
 using Unitful: mm
-using UnitfulRecipes
+using Plots; default(label="", markerstrokecolor=:auto)
 using LaTeXStrings
 using MIRT: diffl_map, ncg
 using Sinograms: todo
@@ -96,9 +94,7 @@ end
 
 # This page was generated with the following version of Julia:
 
-io = IOBuffer()
-versioninfo(io)
-split(String(take!(io)), '\n')
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
 
 
 # And with the following package versions

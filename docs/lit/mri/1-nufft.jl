@@ -44,9 +44,8 @@ if false
     import Pkg
     Pkg.add([
         "ImagePhantoms"
-        "Plots"
         "Unitful"
-        "UnitfulRecipes"
+        "Plots"
         "LaTeXStrings"
         "MIRTjim"
         "MIRT"
@@ -59,9 +58,8 @@ end
 # Run `Pkg.add()` in the preceding code block first, if needed.
 
 using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
-using Plots; default(label="", markerstrokecolor=:auto)
 using Unitful: mm # Allows use of physical units (mm here)
-using UnitfulRecipes # Ensures that plots show appropriate units when applicable
+using Plots; default(label="", markerstrokecolor=:auto)
 using LaTeXStrings # for LaTeX in plot labels, e.g., L"\alpha_n"
 using MIRTjim: jim, prompt # jiffy image display
 using MIRT: Anufft, diffl_map, ncg
