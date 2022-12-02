@@ -31,7 +31,7 @@ in Jan 2020 IEEE Signal Processing Magazine,
 except
 * the sampling is 1D phase encoding instead of 2D,
 * there are multiple coils,
-* we use units # todo
+* we use units (WIP - todo)
 * the simulation avoids inverse crimes.
 =#
 
@@ -51,10 +51,9 @@ using LinearMapsAA: LinearMapAA
 using Plots; default(markerstrokecolor=:auto, label="")
 using FFTW: fft!, bfft!, fftshift!
 using Random: seed!
-using Unitful: mm
+#using Unitful: mm
 using InteractiveUtils: versioninfo
 
-if !@isdefined(ydata) || true # false # todo remove
 
 # The following line is helpful when running this jl-file as a script;
 # this way it will prompt user to hit a key after each image is displayed.
@@ -62,11 +61,13 @@ if !@isdefined(ydata) || true # false # todo remove
 isinteractive() && jim(:prompt, true);
 
 
-# ### Create (synthetic) data
+# ## Create (synthetic) data
 
 # Image geometry:
 
-fovs = (256, 256) .* 1mm # todo: units!
+#src uu = 1mm # todo: units!
+uu = 1
+fovs = (256, 256) .* uu
 nx, ny = (192, 256)
 dx, dy = fovs ./ (nx,ny)
 x = (-(nx÷2):(nx÷2-1)) * dx
@@ -78,12 +79,10 @@ object = ellipse_parameters(SheppLoganBrainWeb() ; disjoint=true, fovs)
 seed!(0)
 object = vcat( (object[1][1:end-1]..., 1), # random phases
     [(ob[1:end-1]..., randn(ComplexF32)) for ob in object[2:end]]...)
-# object = ellipse(object)
-object = ellipse([object[1]]) # todo: simplify
+object = ellipse(object)
 oversample = 3
 Xtrue = phantom(x, y, object, oversample)
 cfun = z -> cat(dims = ndims(z)+1, real(z), imag(z))
-#clim = (0,9)
 jim(:aspect_ratio, :equal)
 jim(x, y, cfun(Xtrue), "True image\n real | imag"; ncol=2)
 
@@ -116,16 +115,16 @@ p4 = jif(x, y, map(x -> angle.(x), smaps), "∠Sensitivity maps"; color=:hsv)
 jim(p1, p2, p3, p4)
 
 
-# Frequency sample vectors:
-fx = (-(nx÷2):(nx÷2-1)) / (nx*dx) # crucial to match `mri_smap_basis` internals!
+# Frequency sample vectors;
+# crucial to match `mri_smap_basis` internals!
+fx = (-(nx÷2):(nx÷2-1)) / (nx*dx)
 fy = (-(ny÷2):(ny÷2-1)) / (ny*dy)
 gx, gy = ndgrid(fx, fy);
 
 # Somewhat random 1D phase-encode sampling:
-seed!(0); sampfrac = 0.4; samp = rand(ny÷2) .< sampfrac
+seed!(0); sampfrac = 0.3; samp = rand(ny÷2) .< sampfrac
 tmp = rand(ny÷2) .< 0.5; samp = [samp .* tmp; reverse(samp .* .!tmp)] # symmetry
 samp .|= (abs.(fy*dy) .< 1/8) # fully sampled center ±1/8 phase-encodes
-samp = trues(ny) # todo: temp full sampling
 ny_count = count(samp)
 samp = trues(nx) * samp'
 samp_frac = round(100*count(samp) / (nx*ny), digits=2)
@@ -147,16 +146,20 @@ jim(
  layout = (1,3),
 )
 
-# Analytical spectra computation for complex phantom using all smaps
-# (no inverse crime here):
+#src todo move elsewhere!
+#src using Unitful: AbstractQuantity, Quantity, unit
+#src (Base.ComplexF32)(x::AbstractQuantity) = Quantity(ComplexF32(x.val), unit(x))
+
+# Analytical spectra computation for complex phantom using all smaps.
+# (No inverse crime here.)
 ytrue = mri_spectra(gx[samp], gy[samp], object, fit)
 ytrue = hcat(ytrue...)
+ytrue = ComplexF32.(ytrue) # save memory
 
 # Noisy under-sampled k-space data:
 sig = 1
-sig = 0 # todo test
-ydata = ytrue + sig * √(2) * randn(ComplexF32, size(ytrue)) # complex noise!
-ydata = ComplexF32.(ydata) # save memory
+ydata = ytrue + oneunit(eltype(ytrue)) *
+    sig * √(2f0) * randn(ComplexF32, size(ytrue)) # complex noise with units!
 ysnr = 20 * log10(norm(ytrue) / norm(ydata - ytrue)) # data SNR in dB
 
 # Display zero-filled data:
@@ -171,29 +174,40 @@ jim(
     title="∠data, coil 1"; color=:hsv)
 )
 
-end # ydata
-
 
 #=
-### Prepare to reconstruct
+## Prepare to reconstruct
 Creating a system matrix (encoding matrix) and an initial image.
 
 The system matrix is a `LinearMapAA` object,
 akin to a `fatrix` in Matlab MIRT.
+
+This system model ("encoding matrix")
+is for a 2D image `x` being mapped
+to an array of size `count(samp) × ncoil` k-space data
+
+Here we construct it from FFT and coil map components.
+So this is like "seeing the sausage being made."
+Eventually this constructor
+should be packaged elsewhere,
+for wrapping around `Afft` or `Anufft`,
+each with its own in-place work buffers and unit tests.
 =#
 
-# System model ("encoding matrix") for 2D image `x` being mapped
-# to array of size `count(samp) × ncoil` k-space data
+"""
+    Asense(samp, smaps)
 
-# todo: this needs a lot of work.
-# should have high-level "Asense" that can wrap around Afft or Anufft
-# each of which having its own in-place work, with tests.
+Construct a MRI encoding matrix model
+for Cartesian sampling pattern `samp`
+and vector of sensitivity maps `smaps`.
 
-function Asense(samp, smaps)
+Returns a `LinearMapAO` object.
+"""
+function Asense(samp, smaps; T::DataType = ComplexF32)
     dims = size(smaps[1])
     N = prod(dims)
-    work1 = Array{ComplexF32}(undef, dims)
-    work2 = Array{ComplexF32}(undef, dims)
+    work1 = Array{T}(undef, dims)
+    work2 = Array{T}(undef, dims)
     ncoil = length(smaps)
     function forw!(y, x)
         for ic in 1:ncoil
@@ -205,7 +219,6 @@ function Asense(samp, smaps)
     function back!(x, y)
         for ic in 1:ncoil
             embed!(work1, (@view y[:,ic]), samp)
-#           bfft!(work2, work1)
             fftshift!(work1, bfft!(fftshift!(work2, work1)))
             copyto!(work2, smaps[ic])
             conj!(work2)
@@ -217,23 +230,25 @@ function Asense(samp, smaps)
         end
     end
     A = LinearMapAA(forw!, back!, (ncoil*count(samp), N);
-        odim = (count(samp),ncoil), idim=dims, T=ComplexF32)
+        odim = (count(samp),ncoil), idim=dims, T) # todo: units!?
     return A
 end
 
 #=
-The `dx * dy` factor here is required
+The `dx * dy` scale factor here is required
 because the true k-space data `ytrue`
-comes from an analytical Fourier transform
+comes from an analytical Fourier transform,
 but the reconstruction uses a discrete Fourier transform.
+This factor is also needed from a unit-balance perspective.
 =#
-A = Asense(samp, smaps) * (dx * dy) # operator!
+Ascale = Float32(dx * dy)
+A = Ascale * Asense(samp, smaps) # operator!
 
 # validate adjoint
 if false
     tmp1 = randn(ComplexF32, A._idim)
     tmp2 = randn(ComplexF32, A._odim)
-    @assert isapprox(dot(tmp2, A * tmp1), dot(A' * tmp2, tmp1); rtol=1e-4)
+    @assert isapprox(dot(tmp2, A * tmp1), dot(A' * tmp2, tmp1)) # rtol=1e-4
 end
 
 # Compare the analytical k-space data with the discrete modeled k-space data
@@ -244,14 +259,13 @@ jim(
  jif(logger(y1; up=maximum(abs,y0)), "discrete"; clim=(-6,0)),
  jif(logger(y1 - y0; up=maximum(abs,y0)), "difference"),
 )
-# norm(y1) / norm(y0) # scale factor is ≈1
+norm(y1) / norm(y0) # scale factor is ≈1
 
 # Initial image based on zero-filled reconstruction.
-# Note the `dx*dy` scale factor here!
+# Note the `(dx*dy)²` scale factor here!
 nrmse = (x) -> round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
 X0 = 1.0f0/(nx*ny) * (A' * ydata) / (dx*dy)^2
 jim(x, y, X0, "|X0|: initial image; NRMSE $(nrmse(X0))%")
-throw()
 
 
 #=
@@ -263,10 +277,11 @@ The image reconstruction optimization problem here is
 \frac{1}{2} \| A x - y \|_2^2 + \beta \; \| W x \|_1
 ```
 where
-``y`` is the k-space data,
-``A`` is the system model (simply Fourier encoding `F` here),
-``W`` is an orthogonal discrete (Haar) wavelet transform,
-again implemented as a `LinearMapAA` object.
+- ``y`` is the k-space data,
+- ``A`` is the system model (simply Fourier encoding `F` here),
+- ``W`` is an orthogonal discrete (Haar) wavelet transform,
+  again implemented as a `LinearMapAA` object.
+
 Because ``W`` is unitary,
 we make the change of variables
 ``z = W x``
@@ -283,27 +298,44 @@ W, scales, _ = Aodwt((nx,ny) ; T = eltype(A))
 isdetail = scales .> 0
 jim(
  jif(scales, "wavelet scales"),
- jif(real(W * Xtrue) .* isdetail, "wavelet detail coefficients"),
+ jif(real(W * Xtrue) .* isdetail, "wavelet detail coefficients\nreal for Xtrue"),
 )
 
 
-# Inputs needed for proximal gradient methods:
+#=
+Inputs needed for proximal gradient methods.
+The trickiest part of this is determining
+a bound on the Lipschitz constant,
+i.e., the spectral norm of ``Az'Az``.
+Here we have SSOS=1 for the coil maps,
+so we just need to account for the number of voxels
+(because `fft` & `bfft` are not the unitary DFT)
+and for the scale factor.
+(If SSOS was nonuniform,
+we would use eqn. (6) of
+[Matt Muckley's BARISTA paper](http://doi.org/10.1109/TMI.2014.2363034).
+Submit an issue if you need an example using that.)
+=#
+f_Lz = Ascale^2 * nx*ny # Lipschitz constant
 Az = A * W' # another operator!
 Fnullz = (z) -> 0 # cost function in `z` not needed
 f_gradz = (z) -> Az' * (Az * z - ydata)
-f_Lz = nx*ny # Lipschitz constant for single coil Cartesian DFT
 regz = 0.03 * nx * ny # oracle from Xtrue wavelet coefficients!
 costz = (z) -> 1/2 * norm(Az * z - ydata)^2 + regz * norm(z,1) # 1-norm regularizer
 soft = (z,c) -> sign(z) * max(abs(z) - c, 0) # soft thresholding
 g_prox = (z,c) -> soft.(z, isdetail .* (regz * c)) # proximal operator (shrink details only)
 z0 = W * X0
-jim(z0, "Initial wavelet coefficients")
+jim(
+ jif(z0, "|wavelet coefficients|"),
+ jif(z0 .* isdetail, "|detail coefficients|"),
+ ; plot_title = "Initial",
+)
 
 
 #=
 ## Iterate
 
-Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart
+Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart.
 See [Kim & Fessler, 2018](http://doi.org/10.1007/s10957-018-1287-4)
 for adaptive restart algorithm details.
 =#
@@ -346,7 +378,7 @@ jim(
 #src savefig("xpogm_odwt.pdf")
 
 
-# ## POGM is fastest
+# ## Convergence rate: POGM is fastest
 
 # Plot cost function vs iteration:
 cost_ista = [out_ista[k][1] for k in 1:niter+1]
@@ -377,13 +409,34 @@ scatter!(0:niter, nrmse_pogm, markershape=:utriangle, label="NRMSE POGM")
 isinteractive() && prompt();
 
 # Show error images:
-p1 = jif(x, y, Xtrue, "true")
-p2 = jif(x, y, X0, "X0: initial"; xlabel = "$(nrmse(X0))%")
-p3 = jif(x, y, Xpogm, "POGM recon"; xlabel = "$(nrmse(Xpogm))%")
-p5 = jif(x, y, X0 - Xtrue, "X0 error", clim=(0,2))
-p6 = jif(x, y, Xpogm - Xtrue, "Xpogm error", clim=(0,2))
+snrfun = (x) -> round(-20log10(nrmse(x)/100); digits=1)
+p1 = jif(x, y, Xtrue, "|true|"; clim=(0,2.5))
+p2 = jif(x, y, X0, "|X0|: initial"; clim=(0,2.5))
+p3 = jif(x, y, Xpogm, "|POGM recon|"; clim=(0,2.5))
+p5 = jif(x, y, X0 - Xtrue, "|X0 error|"; clim=(0,1), color=:cividis,
+   xlabel = "NRMSE = $(nrmse(X0))%\n SNR = $(snrfun(X0)) dB")
+p6 = jif(x, y, Xpogm - Xtrue, "|Xpogm error|"; clim=(0,1), color=:cividis,
+   xlabel = "NRMSE = $(nrmse(Xpogm))%\n SNR = $(snrfun(Xpogm)) dB")
 pe = jim(p2, p3, p5, p6)
 
+
+#=
+## Discussion
+
+As reported in the optimization survey paper cited above,
+POGM converges faster than ISTA and FISTA.
+
+The final images serve as a reminder
+that NRMSE (and PSNR)
+and dubious image quality metrics.
+The NRMSE after 20 iterations may seem
+only a bit lower
+than the NRMSE of the initial image,
+but aliasing artifacts (ripples)
+were greatly reduced
+by the CS-SENSE reconstruction method.
+The SNR
+=#
 
 
 # ### Reproducibility
