@@ -46,10 +46,10 @@ using Plots; default(markerstrokecolor=:auto, label="")
 using MIRT: Afft, Asense
 using MIRTjim: jim, prompt
 using FFTW: fft!, bfft!, fftshift!
-using LinearMapsAA: LinearMapAA, block_diag
+using LinearMapsAA: LinearMapAA, block_diag, redim
 using MAT: matread
 import Downloads # todo: use Fetch or DataDeps?
-using LinearAlgebra: dot, norm
+using LinearAlgebra: dot, norm, I
 using Random: seed!
 using StatsBase: mean
 using LaTeXStrings
@@ -133,6 +133,8 @@ sum_last = (f, x) -> selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
 ssos_fun = smap -> sqrt.(sum_last(abs2, smap)) # SSoS
 ssos_raw = ssos_fun(smaps_raw)
 smaps = smaps_raw ./ ssos_raw
+ssos = ssos_fun(smaps)
+@assert all(≈(1), ssos)
 jim(smaps, "Normalized |coil maps| for $nc coils")
 
 #=
@@ -191,9 +193,16 @@ tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
 ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
 size(ydata)
 
+# Final encoding operator for L+S because we stack [L;S]
+tmp = LinearMapAA(I(nx*ny*nt);
+    odim=(nx,ny,nt), idim=(nx,ny,nt), T=ComplexF32, prop=(;name="I"))
+tmp = kron([1 1], tmp)
+AII = redim(tmp; odim=(nx,ny,nt), idim=(nx,ny,nt,2)) # "squeeze" odim
+E = A * AII
+
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
-scale = dot(tmp, ydata) / norm(tmp)^2
+scale = dot(tmp, ydata) / norm(tmp)^2 # todo: why
 
 # Crude initial image
 L0 = A' * ydata # adjoint (zero-filled)
