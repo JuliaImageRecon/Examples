@@ -41,17 +41,17 @@ This page was generated from a single Julia file:
 
 # Packages needed here.
 
-using MIRTjim: jim, prompt
-using MAT: matread
-using FFTW: fft!, bfft!, fftshift!
-import Downloads # todo: use Fetch or DataDeps?
-using LinearMapsAA: LinearMapAA, block_diag
-using LinearAlgebra: dot
-using MIRT: Afft, Asense
-using Random: seed!
-using StatsBase: mean
 #using Unitful: s
 using Plots; default(markerstrokecolor=:auto, label="")
+using MIRT: Afft, Asense
+using MIRTjim: jim, prompt
+using FFTW: fft!, bfft!, fftshift!
+using LinearMapsAA: LinearMapAA, block_diag
+using MAT: matread
+import Downloads # todo: use Fetch or DataDeps?
+using LinearAlgebra: dot, norm
+using Random: seed!
+using StatsBase: mean
 using LaTeXStrings
 
 
@@ -64,8 +64,38 @@ isinteractive() ? jim(:prompt, true) : prompt(:draw);
 #=
 ### Overview
 
-This example reproduces part of Figs 1 & 2 in
-[the paper](http://doi.org/10.1109/TCI.2018.2882089),
+Dynamic image reconstruction
+using a "low-rank plus sparse"
+or "L+S" approach
+was proposed by
+[Otazo et al.](http://doi.org/10.1002/mrm.25240)
+and uses the following cost function:
+
+```math
+X = \hat{L} + \hat{S}
+,\qquad
+(\hat{L}, \hat{S})
+= \arg \min_{L,S} \frac{1}{2} \| A (L + S) - d \|_2^2
+ + λ_L \| L \|_*
+ + λ_S \| T S \|_1
+```
+where ``T`` is a temporal unitary FFT
+and ``d``
+is Cartesian undersampled multicoil k-space data.
+
+The Otazo paper used an
+iterative soft thresholding algorithm (ISTA)
+to solve this optimization problem.
+Using FISTA is faster,
+but using
+the
+[proximal optimized gradient method (POGM)](http://doi.org/10.1137/16m108104x)
+with
+[adaptive restart](http://doi.org/10.1007/s10957-018-1287-4)
+is even faster.
+
+This example reproduces part of Figures 1 & 2 in
+[Claire Lin's paper](http://doi.org/10.1109/TCI.2018.2882089),
 based on the
 [cardiac perfusion example](https://github.com/JeffFessler/reproduce-l-s-dynamic-mri/blob/master/examples/example_cardiac_perf.m).
 =#
@@ -78,18 +108,19 @@ if !@isdefined(data)
     xinfurl = url * "Xinf.mat"
     Xinf = matread(Downloads.download(xinfurl))["Xinf"]["perf"] # (128,128,40)
 end;
-# Show converged image:
-# jim(Xinf, L"\mathrm{Converged\ image\ } X_∞")
 
-# Organize k-space data
-ydata = data["kdata"] # k-space data
-ydata = permutedims(ydata, [1, 2, 4, 3]) # (nx,ny,nc,nt)
-(nx,ny,nc,nt) = size(ydata)
+# Show converged image:
+jim(Xinf, L"\mathrm{Converged\ image\ } X_∞")
+
+# Organize k-space data:
+ydata0 = data["kdata"] # k-space data full of zeros
+ydata0 = permutedims(ydata0, [1, 2, 4, 3]) # (nx,ny,nc,nt)
+(nx,ny,nc,nt) = size(ydata0)
 
 # Extract sampling pattern from zeros of k-space data:
-samp = ydata[:,:,1,:] .!= 0
+samp = ydata0[:,:,1,:] .!= 0
 for ic in 2:nc # verify it is same for all coils
-    @assert samp == (ydata[:,:,ic,:] .!= 0)
+    @assert samp == (ydata0[:,:,ic,:] .!= 0)
 end
 kx = -(nx÷2):(nx÷2-1)
 ky = -(ny÷2):(ny÷2-1)
@@ -106,7 +137,7 @@ jim(smaps, "Normalized |coil maps| for $nc coils")
 
 #=
 Temporal unitary FFT sparsifying transform
-for image sequence of size (nx, ny, nt)
+for image sequence of size (nx, ny, nt):
 =#
 function makeTF(dims::Dims, nt::Int; T = ComplexF32)
     N = prod(dims)
@@ -130,32 +161,58 @@ if false # verify adjoint
 end
 (size(TF), TF._odim, TF._idim)
 
-# Examine temporal sparsity of Xinf.
-# As expected, low temporal frequencies dominate
+#=
+Examine temporal Fourier sparsity of Xinf.
+The low temporal frequencies dominate,
+as expected,
+because Xinf was reconstructed
+using this regularizer!
+=#
 tmp = TF * Xinf
 jim(tmp, "|Temporal FFT of Xinf|")
 
-# Construct dynamic parallel MRI system model
+#=
+## System matrix
+Construct dynamic parallel MRI system model.
+It is block diagonal
+where each frame has its own sampling pattern.
+The input (image) here has size `(nx=128, ny=128, nt=40)`.
+The output (data) has size `(nsamp=2048, nc=12, nt=40)`
+because every frame
+has 16 phase-encode lines of 128 samples.
+=#
 A = block_diag([Asense(s, smaps) for s in eachslice(samp, dims=3)]...)
+A = ComplexF32(1/sqrt(nx*ny)) * A # match Otazo's scaling
 (size(A), A._odim, A._idim)
+
+# Reshape data to match the system model
+tmp = reshape(ydata0, :, nc, nt)
+tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
+ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
+size(ydata)
+
+# Check scale factor of Xinf. (It should be ≈1.)
+tmp = A * Xinf
+scale = dot(tmp, ydata) / norm(tmp)^2
+
+# Crude initial image
+L0 = A' * ydata # adjoint (zero-filled)
+tmp = A * L0
+L0 .*= dot(tmp, ydata) / norm(tmp)^2 # optimal initial scaling
+S0 = zeros(nx, ny, nt)
+X0 = L0 + S0
+jim(X0)
+
+throw()
+
+
+#=
+## L+S reconstruction
+=#
 
 # scalars to match Otazo's results
 scaleL = 130 / 1.2775 # Otazo's stopping St(1) / b1 constant squared
 scaleS = 1 / 1.2775 # 1 / b1 constant squared
-
-#=
-## L+S reconstructiona
-
-
-```math
-\arg \min_{L,S} \frac{1}{2} \| A (L + S) - d \|_2^2
- + λ_L \| L \|_*
- + λ_S \| T S \|_1
-```
-where ``T`` is a temporal unitary FFT.
-and ``d``
-is Cartesian undersampled multicoil k-space data.
-=#
 
 #=
 %% prepare for AL: opt
