@@ -44,9 +44,10 @@ This page was generated from a single Julia file:
 #using Unitful: s
 using Plots; default(markerstrokecolor=:auto, label="")
 using MIRT: Afft, Asense
+using MIRT: pogm_restart, poweriter
 using MIRTjim: jim, prompt
 using FFTW: fft!, bfft!, fftshift!
-using LinearMapsAA: LinearMapAA, block_diag, redim
+using LinearMapsAA: LinearMapAA, block_diag, redim, undim
 using MAT: matread
 import Downloads # todo: use Fetch or DataDeps?
 using LinearAlgebra: dot, norm, I
@@ -54,10 +55,12 @@ using Random: seed!
 using StatsBase: mean
 using LaTeXStrings
 
+if !@isdefined(ydata) # todo
 
 # The following line is helpful when running this file as a script;
 # this way it will prompt user to hit a key after each figure is displayed.
 
+jif(args...; kwargs...) = jim(args...; prompt=false, kwargs...)
 isinteractive() ? jim(:prompt, true) : prompt(:draw);
 
 
@@ -124,7 +127,7 @@ for ic in 2:nc # verify it is same for all coils
 end
 kx = -(nx÷2):(nx÷2-1)
 ky = -(ny÷2):(ny÷2-1)
-jim(kx, ky, samp, "Samping patterns for $nt frames")
+jim(kx, ky, samp, "Samping patterns for $nt frames"; xlabel=L"k_x", ylabel=L"k_y")
 
 # Prepare coil sensitivity maps
 smaps_raw = data["b1"] # raw coil sensitivity maps
@@ -193,6 +196,8 @@ tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
 ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
 size(ydata)
 
+end # ydata
+
 # Final encoding operator for L+S because we stack [L;S]
 tmp = LinearMapAA(I(nx*ny*nt);
     odim=(nx,ny,nt), idim=(nx,ny,nt), T=ComplexF32, prop=(;name="I"))
@@ -200,19 +205,23 @@ tmp = kron([1 1], tmp)
 AII = redim(tmp; odim=(nx,ny,nt), idim=(nx,ny,nt,2)) # "squeeze" odim
 E = A * AII
 
+# Run power iteration to verify that `opnorm(E) = √2`
+if false
+    (_, σ1) = poweriter(undim(E))
+end
+
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
-scale = dot(tmp, ydata) / norm(tmp)^2 # todo: why
+scale = dot(tmp, ydata) / norm(tmp)^2 # todo: why not ≈1?
 
 # Crude initial image
 L0 = A' * ydata # adjoint (zero-filled)
 tmp = A * L0
 L0 .*= dot(tmp, ydata) / norm(tmp)^2 # optimal initial scaling
 S0 = zeros(nx, ny, nt)
-X0 = L0 + S0
-jim(X0)
-
-throw()
+X0 = cat(L0, S0, dims=ndims(L0)+1) # (nx, ny, nt, 2) = (128, 128, 40, 2)
+M0 = AII * X0 # L0 + S0
+jim(M0, "Initial L+S via zero-filled rcon")
 
 
 #=
@@ -237,18 +246,87 @@ d1 = 1/5; d2 = 1/50; %for AL-2
 [L_al,S_al,xdiff_al,cost_al,time_al,rankL_al] = AL_2(opt,'d1',d1,'d2',d2);
 =#
 
-# Prepare for proximal gradient methods
-niter = 10
-lambda_L = 0.01
+#=
+Prepare for proximal gradient methods
+
+Lipschitz constant of data-fit term is 2
+because A is unitary and AII is like ones(2,2).
+=#
+f_L = 2
+
+# Proximal operator for scaled nuclear norm ``β | X |_*``:
+# singular value soft thresholding (SVST).
+nucnorm(L::AbstractMatrix) = sum(svdvals(L)) # nuclear norm
+nucnorm(L::AbstractArray) = nucnorm(reshape(L, :, nt)) # (nx*ny, nt) for L
+function SVST(X::AbstractArray, β)
+    dims = size(X)
+    X = reshape(X, :, dims[end]) # assume time frame is the last dimension
+    U,s,V = svd(X)
+    sthresh = @. max(s - β, 0)
+    keep = findall(>(0), sthresh)
+    X = U[:,keep] * Diagonal(sthresh[keep]) * V[:,keep]'
+    X = reshape(X, dims)
+    return X
+end;
+
+f_grad = X -> E' * (E * X - ydata) # gradient of data-fit term
+
+# L+S regularizer
+lambda_L = 0.01 # regularization parameter
 lambda_S = 0.01 * scaleS
+Lpart = X -> selectdim(X, ndims(X), 1) # extract "L" from X
+Spart = X -> selectdim(X, ndims(X), 2) # extract "S" from X
+Fcost = X -> 0.5 * norm(E * X - ydata)^2 +
+    lambda_L * nucnorm(Lpart(X)) +
+    lambda_S * norm(TF * Spart(X)) # optimization cost function
+
+# L and S proximal operators
+soft = (v,c) -> sign(v) * max(abs(v) - c, 0) # soft threshold function
+S_prox = (S, β) -> TF' * soft.(TF * S, β) # 1-norm proximal mapping for unitary TF
+g_prox = (X, c) -> cat(dims=ndims(X),
+    SVST(Lpart(X), c * lambda_L),
+    S_prox(Spart(X), c * lambda_S),
+)
+
+if false # check functions
+    @assert Fcost(X0) isa Real
+    tmp = f_grad(X0)
+    @assert size(tmp) == size(X0)
+    tmp = SVST(Lpart(X0), 1)
+    @assert size(tmp) == size(L0)
+    tmp = S_prox(S0, 1)
+    @assert size(tmp) == size(S0)
+    tmp = g_prox(X0, 1)
+    @assert size(tmp) == size(X0)
+end
+
+
+niter = 10
+fun = (iter, xk, yk, is_restart) -> Fcost(xk)
+
+xpogm, out_pogm = pogm_restart(X0, (x) -> 0, f_grad, f_L ;
+    mom = :pogm, niter, g_prox, fun)
+Mpogm = AII * xpogm
+
+px = jim(
+ jif(Lpart(xpogm), "L"),
+ jif(Spart(xpogm), "S"),
+ jif(Mpogm, "M=L+S"),
+ jif(Xinf, "Minf"),
+)
+
+pc = plot(xlabel = "iteration", ylabel = "cost")
+plot!(0:niter, out_pogm, marker=:star, label="POGM")
+
+throw()
+
+
 # ISTA
 # [L_ista,S_ista,xdiff_ista,cost_ista,time_ista,rankL_ista] = PGM(param);
 # FISTA
 # [L_fista,S_fista,xdiff_fista,cost_fista,time_fista,rankL_fista] = PGM(param,'fistaL',1,'fistaS',1);
 # POGM
 # [L_pogm,S_pogm,xdiff_pogm,cost_pogm,time_pogm,rankL_pogm] = PGM(param,'pogmS',1,'pogmL',1);
-
-throw()
 
 #=
 %% Display: 4 frames
@@ -266,7 +344,7 @@ subplot(3,1,3),imshow(abs(Sd),[0,1]);ylabel('S')
 # Extract arrays used in simulation
 
 # Function for computing RMSE within the mask
-frmse = f -> round(sqrt(sum(abs2, (f - ftrue)[mask]) / count(mask)) * s, digits=1) / s;
+# frmse = f -> round(sqrt(sum(abs2, (f - ftrue)[mask]) / count(mask)) * s, digits=1) / s;
 
 
 #=
