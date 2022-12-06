@@ -120,6 +120,8 @@ ydata0 = data["kdata"] # k-space data full of zeros
 ydata0 = permutedims(ydata0, [1, 2, 4, 3]) # (nx,ny,nc,nt)
 (nx,ny,nc,nt) = size(ydata0)
 
+# todo: precompute ifft along readout direction to save time
+
 # Extract sampling pattern from zeros of k-space data:
 samp = ydata0[:,:,1,:] .!= 0
 for ic in 2:nc # verify it is same for all coils
@@ -176,6 +178,7 @@ using this regularizer!
 tmp = TF * Xinf
 jim(tmp, "|Temporal FFT of Xinf|")
 
+
 #=
 ## System matrix
 Construct dynamic parallel MRI system model.
@@ -185,8 +188,14 @@ The input (image) here has size `(nx=128, ny=128, nt=40)`.
 The output (data) has size `(nsamp=2048, nc=12, nt=40)`
 because every frame
 has 16 phase-encode lines of 128 samples.
+
+The code in the original Otazo et al. paper
+used an `ifft` in the forward model
+and an `fft` in the adjoint,
+so we must use a flag here to match that model.
 =#
-A = block_diag([Asense(s, smaps) for s in eachslice(samp, dims=3)]...)
+Aotazo = (samp, smaps) -> Asense(samp, smaps; fft_forward=false) # Otazo style
+A = block_diag([Aotazo(s, smaps) for s in eachslice(samp, dims=3)]...)
 A = ComplexF32(1/sqrt(nx*ny)) * A # match Otazo's scaling
 (size(A), A._odim, A._idim)
 
@@ -195,8 +204,6 @@ tmp = reshape(ydata0, :, nc, nt)
 tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
 ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
 size(ydata)
-
-end # ydata
 
 # Final encoding operator for L+S because we stack [L;S]
 tmp = LinearMapAA(I(nx*ny*nt);
@@ -210,6 +217,8 @@ if false
     (_, σ1) = poweriter(undim(E))
 end
 
+end # ydata
+
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
 scale = dot(tmp, ydata) / norm(tmp)^2 # todo: why not ≈1?
@@ -221,7 +230,16 @@ L0 .*= dot(tmp, ydata) / norm(tmp)^2 # optimal initial scaling
 S0 = zeros(nx, ny, nt)
 X0 = cat(L0, S0, dims=ndims(L0)+1) # (nx, ny, nt, 2) = (128, 128, 40, 2)
 M0 = AII * X0 # L0 + S0
-jim(M0, "Initial L+S via zero-filled rcon")
+jim(M0, "|Initial L+S via zero-filled recon|")
+
+
+tmp = copy(ydata)
+#tmp[:,:,2:end] .= 0 # 1st frame only
+#tmp[:,2:end,:] .= 0 # 1st coil only
+tmp = A' * tmp
+#jim(tmp[:,:,1])
+jim(tmp)
+throw()
 
 
 #=
