@@ -204,7 +204,7 @@ isinteractive() && prompt();
 nrmse_ista = [out_ista[k][2] for k=1:niter+1]
 nrmse_fista = [out_fista[k][2] for k=1:niter+1]
 nrmse_pogm = [out_pogm[k][2] for k=1:niter+1]
-plot(xlabel="iteration k", ylabel="NRMSE %", ylims=(3,6.5))
+pn = plot(xlabel="iteration k", ylabel="NRMSE %", ylims=(3,6.5))
 scatter!(0:niter, nrmse_ista, label="NRMSE ISTA")
 scatter!(0:niter, nrmse_fista, markershape=:square, label="NRMSE FISTA")
 scatter!(0:niter, nrmse_pogm, markershape=:utriangle, label="NRMSE POGM")
@@ -216,7 +216,7 @@ p2 = jim(X0, "X0: initial")
 p3 = jim(Xpogm, "POGM recon")
 p5 = jim(X0 - Xtrue, "X0 error", clim=(0,2))
 p6 = jim(Xpogm - Xtrue, "Xpogm error", clim=(0,2))
-jim(p2, p3, p5, p6)
+pe = jim(p2, p3, p5, p6)
 
 
 
