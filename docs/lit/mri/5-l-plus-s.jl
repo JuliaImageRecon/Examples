@@ -144,29 +144,17 @@ jim(smaps, "Normalized |coil maps| for $nc coils")
 
 #=
 Temporal unitary FFT sparsifying transform
-for image sequence of size (nx, ny, nt):
+for image sequence of size `(nx, ny, nt)`:
 =#
-function makeTF(dims::Dims, nt::Int; T = ComplexF32)
-    N = prod(dims)
-    function forw!(y, x)
-        fft!(copyto!(y, x), length(dims)+1) # FFT along time dimension
-        y ./= sqrt(N) # unitary
-    end
-    function back!(x, y)
-        bfft!(copyto!(x, y), length(dims)+1) # iFFT along time dimension
-        x ./= sqrt(N) # unitary
-    end
-    A = LinearMapAA(forw!, back!, prod(dims)*nt .* (1,1);
-        odim = (dims..., nt), idim = (dims..., nt), T)
-    return A
-end
-TF = makeTF((nx,ny), nt)
+TF = Afft((nx,ny,nt), 3; unitary=true) # unitary FFT along 3rd (time) dimension
 if false # verify adjoint
     tmp1 = randn(ComplexF32, nx, ny, nt)
     tmp2 = randn(ComplexF32, nx, ny, nt)
     @assert dot(tmp2, TF * tmp1) ≈ dot(TF' * tmp2, tmp1)
+    @assert TF' * (TF * tmp1) ≈ tmp1
 end
 (size(TF), TF._odim, TF._idim)
+
 
 #=
 Examine temporal Fourier sparsity of Xinf.
