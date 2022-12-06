@@ -43,7 +43,7 @@ This page was generated from a single Julia file:
 
 #using Unitful: s
 using Plots; default(markerstrokecolor=:auto, label="")
-using MIRT: Afft, Asense
+using MIRT: Afft, Asense, embed
 using MIRT: pogm_restart, poweriter
 using MIRTjim: jim, prompt
 using FFTW: fft!, bfft!, fftshift!
@@ -112,35 +112,44 @@ if !@isdefined(data)
     Xinf = matread(Downloads.download(xinfurl))["Xinf"]["perf"] # (128,128,40)
 end;
 
-# Show converged image:
+# Show converged image as a preview:
 jim(Xinf, L"\mathrm{Converged\ image\ } X_∞")
 
 # Organize k-space data:
-ydata0 = data["kdata"] # k-space data full of zeros
-ydata0 = permutedims(ydata0, [1, 2, 4, 3]) # (nx,ny,nc,nt)
-(nx,ny,nc,nt) = size(ydata0)
+if !@isdefined(ydata0)
+    ydata0 = data["kdata"] # k-space data full of zeros
+    ydata0 = permutedims(ydata0, [1, 2, 4, 3]) # (nx,ny,nc,nt)
+    ydata0 = ComplexF32.(ydata0)
+end
+(nx, ny, nc, nt) = size(ydata0)
 
-# todo: precompute ifft along readout direction to save time
 
 # Extract sampling pattern from zeros of k-space data:
-samp = ydata0[:,:,1,:] .!= 0
-for ic in 2:nc # verify it is same for all coils
-    @assert samp == (ydata0[:,:,ic,:] .!= 0)
+if !@isdefined(samp)
+    samp = ydata0[:,:,1,:] .!= 0
+    for ic in 2:nc # verify it is same for all coils
+        @assert samp == (ydata0[:,:,ic,:] .!= 0)
+    end
+    kx = -(nx÷2):(nx÷2-1)
+    ky = -(ny÷2):(ny÷2-1)
+jim(kx, ky, samp, "Sampling patterns for $nt frames"; xlabel=L"k_x", ylabel=L"k_y")
 end
-kx = -(nx÷2):(nx÷2-1)
-ky = -(ny÷2):(ny÷2-1)
-jim(kx, ky, samp, "Samping patterns for $nt frames"; xlabel=L"k_x", ylabel=L"k_y")
 
 # Prepare coil sensitivity maps
-smaps_raw = data["b1"] # raw coil sensitivity maps
-jim(smaps_raw, "Raw |coil maps| for $nc coils")
-sum_last = (f, x) -> selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
-ssos_fun = smap -> sqrt.(sum_last(abs2, smap)) # SSoS
-ssos_raw = ssos_fun(smaps_raw)
-smaps = smaps_raw ./ ssos_raw
-ssos = ssos_fun(smaps)
-@assert all(≈(1), ssos)
+if !@isdefined(smaps)
+    smaps_raw = data["b1"] # raw coil sensitivity maps
+    jim(smaps_raw, "Raw |coil maps| for $nc coils")
+    sum_last = (f, x) -> selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
+    ssos_fun = smap -> sqrt.(sum_last(abs2, smap)) # SSoS
+    ssos_raw = ssos_fun(smaps_raw)
+    smaps = smaps_raw ./ ssos_raw
+    ssos = ssos_fun(smaps)
+    @assert all(≈(1), ssos)
 jim(smaps, "Normalized |coil maps| for $nc coils")
+end
+
+
+# todo: precompute ifft along readout direction to save time
 
 #=
 Temporal unitary FFT sparsifying transform
@@ -182,16 +191,26 @@ used an `ifft` in the forward model
 and an `fft` in the adjoint,
 so we must use a flag here to match that model.
 =#
-Aotazo = (samp, smaps) -> Asense(samp, smaps; fft_forward=false) # Otazo style
+Aotazo = (samp, smaps) -> Asense(samp, smaps; unitary=true, fft_forward=false) # Otazo style
 A = block_diag([Aotazo(s, smaps) for s in eachslice(samp, dims=3)]...)
-A = ComplexF32(1/sqrt(nx*ny)) * A # match Otazo's scaling
+#A = ComplexF32(1/sqrt(nx*ny)) * A # match Otazo's scaling
 (size(A), A._odim, A._idim)
 
+#src check forward model
+#src tmp = A * Xinf
+#src tmp2 = [embed(tmp[:,:,it], samp[:,:,it]) for it in 1:nt]
+#src tmp = cat(dims=4, tmp2...)
+
 # Reshape data to match the system model
-tmp = reshape(ydata0, :, nc, nt)
-tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
-ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
+if !@isdefined(ydata)
+    tmp = reshape(ydata0, :, nc, nt)
+    tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
+    ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no "zeros"
+end
 size(ydata)
+
+end # ydata
+
 
 # Final encoding operator for L+S because we stack [L;S]
 tmp = LinearMapAA(I(nx*ny*nt);
@@ -202,23 +221,29 @@ E = A * AII
 
 # Run power iteration to verify that `opnorm(E) = √2`
 if false
-    (_, σ1) = poweriter(undim(E))
+    (_, σ1E) = poweriter(undim(E)) # 1.413 ≈ √2
+else
+    σ1E = √2
 end
-
-end # ydata
 
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
-scale = dot(tmp, ydata) / norm(tmp)^2 # todo: why not ≈1?
+scale = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
 
 # Crude initial image
 L0 = A' * ydata # adjoint (zero-filled)
-tmp = A * L0
-L0 .*= dot(tmp, ydata) / norm(tmp)^2 # optimal initial scaling
-S0 = zeros(nx, ny, nt)
+# todo: what does claire do with scaling etc.?
+#src tmp = A * L0
+#src L0 .*= dot(tmp, ydata) / norm(tmp)^2 # optimal initial scaling
+S0 = zeros(ComplexF32, nx, ny, nt)
 X0 = cat(L0, S0, dims=ndims(L0)+1) # (nx, ny, nt, 2) = (128, 128, 40, 2)
 M0 = AII * X0 # L0 + S0
 jim(M0, "|Initial L+S via zero-filled recon|")
+
+tmpfile = "/Users/fessler/dat/git/mine/reproduce-l-s-dynamic-mri/examples/tmp.mat"
+debug = matread(tmpfile)
+@assert debug["tmp"] ≈ M0
+throw(); # xx
 
 
 tmp = copy(ydata)
