@@ -42,7 +42,7 @@ using ImagePhantoms: mri_smap_fit, mri_spectra
 using ImageMorphology: dilate #, label_components # imfill
 using LazyGrids: ndgrid
 using ImageGeoms: embed, embed!
-using MIRT: Aodwt # todo Asense
+using MIRT: Aodwt, Asense
 using MIRTjim: jim, prompt
 using MIRT: ir_mri_sensemap_sim
 using MIRT: pogm_restart
@@ -155,6 +155,7 @@ jim(
 ytrue = mri_spectra(gx[samp], gy[samp], object, fit)
 ytrue = hcat(ytrue...)
 ytrue = ComplexF32.(ytrue) # save memory
+size(ytrue)
 
 # Noisy under-sampled k-space data:
 sig = 1
@@ -168,7 +169,7 @@ jim(:abswarn, false) # suppress warnings about showing magnitude
 tmp = embed(ytrue[:,1],samp)
 jim(
  jif(fx, fy, logger(tmp),
-    title="k-space |data| (zero-filled, coil 1)",
+    title="k-space |data|\n(zero-filled, coil 1)",
     xlabel="νx", ylabel="νy"),
  jif(fx, fy, angle.(tmp),
     title="∠data, coil 1"; color=:hsv)
@@ -177,64 +178,19 @@ jim(
 
 #=
 ## Prepare to reconstruct
-Creating a system matrix (encoding matrix) and an initial image.
+Create a system matrix (encoding matrix) and an initial image.
 
-The system matrix is a `LinearMapAA` object,
-akin to a `fatrix` in Matlab MIRT.
+The system matrix is a `LinearMapAO` object,
+akin to a `fatrix` in
+[Matlab MIRT](https://github.com/JeffFessler/mirt/tree/main/systems/%40fatrix2).
 
 This system model ("encoding matrix")
 is for a 2D image `x` being mapped
-to an array of size `count(samp) × ncoil` k-space data
+to an array of size `count(samp) × ncoil` k-space data.
 
 Here we construct it from FFT and coil map components.
 So this is like "seeing the sausage being made."
-Eventually this constructor
-should be packaged elsewhere,
-for wrapping around `Afft` or `Anufft`,
-each with its own in-place work buffers and unit tests.
-=#
 
-"""
-    Asense(samp, smaps)
-
-Construct a MRI encoding matrix model
-for Cartesian sampling pattern `samp`
-and vector of sensitivity maps `smaps`.
-
-Returns a `LinearMapAO` object.
-"""
-function Asense(samp, smaps; T::DataType = ComplexF32)
-    dims = size(smaps[1])
-    N = prod(dims)
-    work1 = Array{T}(undef, dims)
-    work2 = Array{T}(undef, dims)
-    ncoil = length(smaps)
-    function forw!(y, x)
-        for ic in 1:ncoil
-            @. work1 = x * smaps[ic]
-            fftshift!(work1, fft!(fftshift!(work2, work1)))
-            y[:,ic] .= work1[samp]
-        end
-    end
-    function back!(x, y)
-        for ic in 1:ncoil
-            embed!(work1, (@view y[:,ic]), samp)
-            fftshift!(work1, bfft!(fftshift!(work2, work1)))
-            copyto!(work2, smaps[ic])
-            conj!(work2)
-            if ic == 1
-                @. x = work1 * work2
-            else
-                @. x += work1 * work2
-            end
-        end
-    end
-    A = LinearMapAA(forw!, back!, (ncoil*count(samp), N);
-        odim = (count(samp),ncoil), idim=dims, T) # todo: units!?
-    return A
-end
-
-#=
 The `dx * dy` scale factor here is required
 because the true k-space data `ytrue`
 comes from an analytical Fourier transform,
@@ -243,17 +199,12 @@ This factor is also needed from a unit-balance perspective.
 =#
 Ascale = Float32(dx * dy)
 A = Ascale * Asense(samp, smaps) # operator!
+(size(A), A._odim, A._idim)
 
-# validate adjoint
-if false
-    tmp1 = randn(ComplexF32, A._idim)
-    tmp2 = randn(ComplexF32, A._odim)
-    @assert isapprox(dot(tmp2, A * tmp1), dot(A' * tmp2, tmp1)) # rtol=1e-4
-end
 
-# Compare the analytical k-space data with the discrete modeled k-space data
-y0 = embed(ytrue, samp)
-y1 = embed(A * Xtrue, samp)
+# Compare the analytical k-space data with the discrete model k-space data:
+y0 = embed(ytrue, samp) # analytical
+y1 = embed(A * Xtrue, samp) # discrete
 jim(
  jif(logger(y0; up=maximum(abs,y0)), "analytical"; clim=(-6,0)),
  jif(logger(y1; up=maximum(abs,y0)), "discrete"; clim=(-6,0)),
@@ -261,7 +212,7 @@ jim(
 )
 norm(y1) / norm(y0) # scale factor is ≈1
 
-# Initial image based on zero-filled reconstruction.
+# Initial image based on zero-filled adjoint reconstruction.
 # Note the `(dx*dy)²` scale factor here!
 nrmse = (x) -> round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
 X0 = 1.0f0/(nx*ny) * (A' * ydata) / (dx*dy)^2
@@ -306,7 +257,9 @@ jim(
 Inputs needed for proximal gradient methods.
 The trickiest part of this is determining
 a bound on the Lipschitz constant,
-i.e., the spectral norm of ``Az'Az``.
+i.e., the spectral norm of ``(AW')'(AW')``,
+which is the same as the spectral norm of ``A'A``
+because ``W`` is unitary.
 Here we have SSOS=1 for the coil maps,
 so we just need to account for the number of voxels
 (because `fft` & `bfft` are not the unitary DFT)

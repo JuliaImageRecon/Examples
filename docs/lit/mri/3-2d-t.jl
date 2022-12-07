@@ -149,7 +149,7 @@ S = [Diagonal(vec(selectdim(smap, ndims(smap), ic))) for ic in 1:ncoil]
 SO = s -> LinearMapAA(s ; idim=N, odim=N) # LinearMapAO for coil maps
 AS1 = F -> vcat([F * SO(s) for s in S]...); # [A1*S1; ... ; A1*Sncoil]
 
-# Linear operator input is `(N..., nt)`, output is `(nspf*Nro, Ncoil nt)`
+# Linear operator input is `(N..., nt)`, output is `(nspf*Nro, Ncoil, nt)`
 A = block_diag([AS1(F) for F in Fs]...) # todo: refine show()
 (size(A), A._odim, A._idim)
 
