@@ -1,9 +1,8 @@
-#---------------------------------------------------------
-# # [Compressed Sensing 2D](@id 2-cs-wl-l1-2d)
-#---------------------------------------------------------
-
 #=
-This example illustrates how to perform 2D compressed sensing image reconstruction
+# [Compressed Sensing 2D](@id 2-cs-wl-l1-2d)
+
+This example illustrates how to perform
+2D compressed sensing image reconstruction
 from Cartesian sampled MRI data
 with 1-norm regularization of orthogonal wavelet coefficients,
 using the Julia language.
@@ -11,19 +10,20 @@ using the Julia language.
 This entire page was generated using a single Julia file:
 [2-cs-wl-l1-2d.jl](@__REPO_ROOT_URL__/mri/2-cs-wl-l1-2d.jl).
 =#
+
 #md # In any such Julia documentation,
 #md # you can access the source code
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [nbviewer](https://nbviewer.org/) here:
 #md # [`2-cs-wl-l1-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/2-cs-wl-l1-2d.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
 #md # [`2-cs-wl-l1-2d.ipynb`](@__BINDER_ROOT_URL__/mri/2-cs-wl-l1-2d.ipynb).
 
 #=
 This demo is somewhat similar to Fig. 3 in the survey paper
-"[Optimization methods for MR image reconstruction](http://doi.org/10.1109/MSP.2019.2943645),"
+"[Optimization methods for MR image reconstruction](https://doi.org/10.1109/MSP.2019.2943645),"
 in Jan 2020 IEEE Signal Processing Magazine,
 except that the sampling is 1D phase encoding instead of 2D.
 =#
@@ -144,7 +144,7 @@ jim(z0, "Initial wavelet coefficients")
 ## Iterate
 
 Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart
-See [Kim & Fessler, 2018](http://doi.org/10.1007/s10957-018-1287-4)
+See [Kim & Fessler, 2018](https://doi.org/10.1007/s10957-018-1287-4)
 for adaptive restart algorithm details.
 =#
 

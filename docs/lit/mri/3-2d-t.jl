@@ -1,13 +1,6 @@
-#---------------------------------------------------------
-# # [2D dynamic: temporal TV](@id 3-2d-t)
-#---------------------------------------------------------
-
-#src 2019-06-13, Jeff Fessler
-#src 2019-06-23 update to use more realistic simulated sensitivity maps
-#src 2020-06-20 update
-#src 2021-12-08 Literate
-
 #=
+# [2D dynamic: temporal TV](@id 3-2d-t)
+
 This example illustrates 2D dynamic MRI image reconstruction
 from golden angle (GA) radial sampled k-space data
 collected with multiple coils
@@ -18,12 +11,13 @@ using the Julia language.
 This entire page was generated using a single Julia file:
 [3-2d-t.jl](@__REPO_ROOT_URL__/mri/3-2d-t.jl).
 =#
+
 #md # In any such Julia documentation,
 #md # you can access the source code
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [nbviewer](https://nbviewer.org/) here:
 #md # [`3-2d-t.ipynb`](@__NBVIEWER_ROOT_URL__/mri/3-2d-t.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
 #md # [`3-2d-t.ipynb`](@__BINDER_ROOT_URL__/mri/3-2d-t.ipynb).

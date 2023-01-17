@@ -1,23 +1,20 @@
-#---------------------------------------------------------
-# # [FBP Overview](@id 1-fbp)
-#---------------------------------------------------------
-
 #=
+# [FBP Overview](@id 1-fbp)
+
 This example illustrates how to perform filtered back-projection (FBP)
 image reconstruction in CT
 using the Julia language.
-=#
 
-#=
 This entire page was generated using a single Julia file:
 [1-fbp.jl](@__REPO_ROOT_URL__/ct/1-fbp.jl).
 =#
+
 #md # In any such Julia documentation,
 #md # you can access the source code
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [nbviewer](https://nbviewer.org/) here:
 #md # [`1-fbp.ipynb`](@__NBVIEWER_ROOT_URL__/ct/1-fbp.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
 #md # [`1-fbp.ipynb`](@__BINDER_ROOT_URL__/ct/1-fbp.ipynb),

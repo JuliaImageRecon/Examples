@@ -1,8 +1,6 @@
-#---------------------------------------------------------
-# # [Compressed Sensing 2D pMRI ](@id 4-cs-sense-2d)
-#---------------------------------------------------------
-
 #=
+# [Compressed Sensing 2D pMRI ](@id 4-cs-sense-2d)
+
 This example illustrates how to perform
 2D compressed sensing image reconstruction
 from Cartesian sampled MRI data
@@ -19,14 +17,14 @@ This page was generated using a single Julia file:
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [nbviewer](https://nbviewer.org/) here:
 #md # [`4-cs-sense-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/4-cs-sense-2d.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
 #md # [`4-cs-sense-2d.ipynb`](@__BINDER_ROOT_URL__/mri/4-cs-sense-2d.ipynb).
 
 #=
 This demo is somewhat similar to Fig. 3 in the survey paper
-"[Optimization methods for MR image reconstruction](http://doi.org/10.1109/MSP.2019.2943645),"
+"[Optimization methods for MR image reconstruction](https://doi.org/10.1109/MSP.2019.2943645),"
 in Jan 2020 IEEE Signal Processing Magazine,
 except
 * the sampling is 1D phase encoding instead of 2D,
@@ -133,7 +131,7 @@ jim(fx, fy, samp, title="k-space sampling ($ny_count / $ny = $samp_frac%)")
 
 
 # To avoid an inverse crime, here we use the 2012 method of
-# [Guerquin-Kern et al.](http://doi.org/10.1109/TMI.2011.2174158)
+# [Guerquin-Kern et al.](https://doi.org/10.1109/TMI.2011.2174158)
 # and use the analytical k-space values of the phantom
 # combined with an analytical model for the sensitivity maps.
 
@@ -266,7 +264,7 @@ so we just need to account for the number of voxels
 and for the scale factor.
 (If SSOS was nonuniform,
 we would use eqn. (6) of
-[Matt Muckley's BARISTA paper](http://doi.org/10.1109/TMI.2014.2363034).
+[Matt Muckley's BARISTA paper](https://doi.org/10.1109/TMI.2014.2363034).
 Submit an issue if you need an example using that.)
 =#
 f_Lz = Ascale^2 * nx*ny # Lipschitz constant
@@ -289,7 +287,7 @@ jim(
 ## Iterate
 
 Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart.
-See [Kim & Fessler, 2018](http://doi.org/10.1007/s10957-018-1287-4)
+See [Kim & Fessler, 2018](https://doi.org/10.1007/s10957-018-1287-4)
 for adaptive restart algorithm details.
 =#
 
