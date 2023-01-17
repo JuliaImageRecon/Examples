@@ -5,9 +5,10 @@
 #=
 This page illustrates dynamic parallel MRI image reconstruction
 using a low-rank plus sparse (L+S) model
-as illustrated in the paper
+optimized by a fast algorithm
+described in the paper
 by Claire Lin and Jeff Fessler
-[Efficient Dynamic Parallel MRI Reconstruction for the Low-Rank Plus Sparse Model](http://doi.org/10.1109/TCI.2018.2882089),
+[Efficient Dynamic Parallel MRI Reconstruction for the Low-Rank Plus Sparse Model](https://doi.org/10.1109/TCI.2018.2882089),
 IEEE Trans. on Computational Imaging, 5(1):17-26, 2019,
 by Claire Lin and Jeff Fessler,
 EECS Department, University of Michigan.
@@ -21,7 +22,7 @@ If you use this code,
 please cite that paper.
 
 This page was generated from a single Julia file:
-[5-l-plus-s.jl](@__REPO_ROOT_URL__/5-l-plus-s.jl).
+[5-l-plus-s.jl](@__REPO_ROOT_URL__/mri/5-l-plus-s.jl).
 =#
 
 #md # In any such Julia documentation,
@@ -29,10 +30,10 @@ This page was generated from a single Julia file:
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
-#md # [`5-l-plus-s.ipynb`](@__NBVIEWER_ROOT_URL__/5-l-plus-s.ipynb),
+#md # [nbviewer](https://nbviewer.org/) here:
+#md # [`5-l-plus-s.ipynb`](@__NBVIEWER_ROOT_URL__/mri/5-l-plus-s.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
-#md # [`5-l-plus-s.ipynb`](@__BINDER_ROOT_URL__/5-l-plus-s.ipynb).
+#md # [`5-l-plus-s.ipynb`](@__BINDER_ROOT_URL__/mri/5-l-plus-s.ipynb).
 
 
 # ### Setup
@@ -68,7 +69,7 @@ Dynamic image reconstruction
 using a "low-rank plus sparse"
 or "L+S" approach
 was proposed by
-[Otazo et al.](http://doi.org/10.1002/mrm.25240)
+[Otazo et al.](https://doi.org/10.1002/mrm.25240)
 and uses the following cost function:
 
 ```math
@@ -90,13 +91,13 @@ to solve this optimization problem.
 Using FISTA is faster,
 but using
 the
-[proximal optimized gradient method (POGM)](http://doi.org/10.1137/16m108104x)
+[proximal optimized gradient method (POGM)](https://doi.org/10.1137/16m108104x)
 with
-[adaptive restart](http://doi.org/10.1007/s10957-018-1287-4)
+[adaptive restart](https://doi.org/10.1007/s10957-018-1287-4)
 is even faster.
 
 This example reproduces part of Figures 1 & 2 in
-[Claire Lin's paper](http://doi.org/10.1109/TCI.2018.2882089),
+[Claire Lin's paper](https://doi.org/10.1109/TCI.2018.2882089),
 based on the
 [cardiac perfusion example](https://github.com/JeffFessler/reproduce-l-s-dynamic-mri/blob/master/examples/example_cardiac_perf.m).
 =#
