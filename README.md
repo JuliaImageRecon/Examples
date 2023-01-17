@@ -23,5 +23,5 @@ click this button:
 [docs-url]: https://JuliaImageRecon.github.io/Examples
 [examples-img]: https://img.shields.io/badge/-Examples-blue
 [examples-url]: https://JuliaImageRecon.github.io/Examples
-[license-img]: http://img.shields.io/badge/license-MIT-brightgreen
+[license-img]: https://img.shields.io/badge/license-MIT-brightgreen
 [license-url]: LICENSE

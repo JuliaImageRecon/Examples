@@ -1,8 +1,6 @@
-#---------------------------------------------------------
-# # [NUFFT Overview](@id 1-nufft)
-#---------------------------------------------------------
-
 #=
+# [NUFFT Overview](@id 1-nufft)
+
 This example illustrates how to use Nonuniform FFT (NUFFT)
 for image reconstruction in MRI
 using the Julia language.
@@ -10,12 +8,13 @@ using the Julia language.
 This entire page was generated using a single Julia file:
 [1-nufft.jl](@__REPO_ROOT_URL__/mri/1-nufft.jl).
 =#
+
 #md # In any such Julia documentation,
 #md # you can access the source code
 #md # using the "Edit on GitHub" link in the top right.
 
 #md # The corresponding notebook can be viewed in
-#md # [nbviewer](http://nbviewer.jupyter.org/) here:
+#md # [nbviewer](https://nbviewer.org/) here:
 #md # [`1-nufft.ipynb`](@__NBVIEWER_ROOT_URL__/mri/1-nufft.ipynb),
 #md # and opened in [binder](https://mybinder.org/) here:
 #md # [`1-nufft.ipynb`](@__BINDER_ROOT_URL__/mri/1-nufft.ipynb).
@@ -268,9 +267,9 @@ p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF"; cli
 #=
 The image is more reasonable than without any DCF,
 but we can do better (quantitatively) using the correction of
-[Lauzon&Rutt, 1996](http://doi.org/10.1002/mrm.1910360617)
+[Lauzon&Rutt, 1996](https://doi.org/10.1002/mrm.1910360617)
 and
-[Joseph, 1998](http://doi.org/10.1002/mrm.1910400317).
+[Joseph, 1998](https://doi.org/10.1002/mrm.1910400317).
 =#
 
 dcf = pi / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
@@ -366,7 +365,7 @@ Nonlinear CG is well suited to convex problems
 that are locally quadratic
 like the regularized cost function considered here.
 See
-[this survey paper](http://doi.org/10.1109/MSP.2019.2943645)
+[this survey paper](https://doi.org/10.1109/MSP.2019.2943645)
 for an overview of optimization methods for MRI.
 =#
 
@@ -394,8 +393,8 @@ because the phantom is piece-wise constant,
 which is the best case for edge-preserving regularization.
 On the other hand,
 this was not an
-[inverse crime](http://doi.org/10.1016/j.cam.2005.09.027)
-([see also here](http://arxiv.org/abs/2109.08237))
+[inverse crime](https://doi.org/10.1016/j.cam.2005.09.027)
+([see also here](https://arxiv.org/abs/2109.08237))
 because the k-space data came from the analytical spectrum of ellipses,
 rather than from a discrete image.
 
