@@ -255,10 +255,10 @@ Spart = X -> selectdim(X, ndims(X), 2) # extract "S" from X
 nucnorm(L::AbstractMatrix) = sum(svdvals(L)) # nuclear norm
 nucnorm(L::AbstractArray) = nucnorm(reshape(L, :, nt)); # (nx*ny, nt) for L
 
-# Optimization cost function
+# Optimization overall composite cost function
 Fcost = X -> 0.5 * norm(E * X - ydata)^2 +
     lambda_L * scaleL * nucnorm(Lpart(X)) + # note scaleL !
-    lambda_S * norm(TF * Spart(X));
+    lambda_S * norm(TF * Spart(X), 1);
 
 f_grad = X -> E' * (E * X - ydata); # gradient of data-fit term
 
