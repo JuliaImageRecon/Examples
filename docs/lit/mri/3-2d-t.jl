@@ -7,20 +7,9 @@ collected with multiple coils
 (parallel MRI),
 with temporal "TV" regularizer (corner-rounded)
 using the Julia language.
-
-This entire page was generated using a single Julia file:
-[3-2d-t.jl](@__REPO_ROOT_URL__/mri/3-2d-t.jl).
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`3-2d-t.ipynb`](@__NBVIEWER_ROOT_URL__/mri/3-2d-t.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`3-2d-t.ipynb`](@__BINDER_ROOT_URL__/mri/3-2d-t.ipynb).
+#srcURL
 
 using ImageGeoms: ImageGeom
 using ImagePhantoms: shepp_logan, SouthPark, phantom, ellipse, spectrum
@@ -218,3 +207,5 @@ anim3 = @animate for it in 1:nt
     )
 end
 gif(anim3; fps = 6)
+
+include("../../inc/reproduce.jl")

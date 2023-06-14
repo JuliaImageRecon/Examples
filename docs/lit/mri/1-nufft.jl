@@ -4,20 +4,9 @@
 This example illustrates how to use Nonuniform FFT (NUFFT)
 for image reconstruction in MRI
 using the Julia language.
-
-This entire page was generated using a single Julia file:
-[1-nufft.jl](@__REPO_ROOT_URL__/mri/1-nufft.jl).
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`1-nufft.ipynb`](@__NBVIEWER_ROOT_URL__/mri/1-nufft.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`1-nufft.ipynb`](@__BINDER_ROOT_URL__/mri/1-nufft.ipynb).
+#srcURL
 
 #=
 Some MRI scans use non-Cartesian sampling patterns
@@ -53,7 +42,7 @@ if false
 end
 
 
-# Now tell this Julia session to use the following packages for this example.
+# Now tell this Julia session to use the following packages.
 # Run `Pkg.add()` in the preceding code block first, if needed.
 
 using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
@@ -65,15 +54,15 @@ using MIRT: Anufft, diffl_map, ncg
 using InteractiveUtils: versioninfo
 
 
-# The following line is helpful when running this jl-file as a script;
+# The following line is helpful when running this file as a script;
 # this way it will prompt user to hit a key after each image is displayed.
 
 isinteractive() && jim(:prompt, true);
 
 
-# ## Radial k-space sampling
-
 #=
+## Radial k-space sampling
+
 We focus on radial sampling as a simple representative non-Cartesian case.
 Consider imaging a 256mm × 256mm field of FOV
 with the goal of reconstructing a 128 × 128 pixel image.
@@ -122,9 +111,9 @@ scatter(Ωx, Ωy,
 isinteractive() && prompt();
 
 
-# ## Radial k-space data for Shepp-Logan phantom
-
 #=
+## Radial k-space data for Shepp-Logan phantom
+
 Get the ellipse parameters for a MRI-suitable version of the Shepp-Logan phantom
 and calculate (analytically) the radial k-space data.
 Then display in polar coordinates.
@@ -144,9 +133,9 @@ jim(kr, kϕ, abs.(data), title="k-space data magnitude",
 )
 
 
-# ## Non-iterative gridding image reconstruction
-
 #=
+## Non-iterative gridding image reconstruction
+
 It would be impossible for a radiologist
 to diagnose a patient
 from the k-space data in polar coordinates,
@@ -199,9 +188,9 @@ clim = (0, 9)
 p0 = jim(x, y, ideal, title="True Shepp-Logan phantom"; clim)
 
 
-# ## NUFFT approach to gridding
-
 #=
+## NUFFT approach to gridding
+
 Basic nearest-neighbor gridding
 does not provide acceptable image quality in MRI,
 so now we turn to using the NUFFT.
@@ -233,9 +222,9 @@ gridded2 = A' * vec(data)
 jim(x, y, gridded2, title="NUFFT gridding without DCF")
 
 
-# ## Density compensation
-
 #=
+## Density compensation
+
 To get a decent image with NUFFT-based gridding of non-Cartesian data,
 one must compensate for the k-space sampling density.
 See
@@ -408,14 +397,4 @@ rather than from a discrete image.
 * There was no statistical noise in this simulation.
 =#
 
-
-# ## Reproducibility
-
-# This page was generated with the following version of Julia:
-
-io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
-
-
-# And with the following package versions
-
-import Pkg; Pkg.status()
+include("../../inc/reproduce.jl")
