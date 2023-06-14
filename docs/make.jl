@@ -21,7 +21,7 @@ binder_root_url =
     "https://mybinder.org/v2/gh/$base/gh-pages?filepath=generated"
 
 # preprocessing
-inc1 = "include(\"../../../inc/reproduce.jl\")"
+inc1 = "include(\"../../inc/reproduce.jl\")"
 
 function prep_markdown(str, root, file)
     inc_read(file) = read(joinpath("docs/inc", file), String)
