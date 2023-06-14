@@ -375,7 +375,6 @@ than the NRMSE of the initial image,
 but aliasing artifacts (ripples)
 were greatly reduced
 by the CS-SENSE reconstruction method.
-The SNR
 =#
 
 

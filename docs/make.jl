@@ -29,7 +29,7 @@ function prep_markdown(str, root, file)
     str = replace(str, inc1 => repro)
     urls = inc_read("urls.jl")
     file = joinpath(splitpath(root)[end], splitext(file)[1])
-    tmp = splitpath(root)[end-3:end] # docs lit ?? 00
+    tmp = splitpath(root)[end-2:end] # docs lit ??
     urls = replace(urls,
         "xxxrepo" => joinpath(repo_root_url, tmp...),
         "xxxnb" => joinpath(nbviewer_root_url, tmp[end]),

@@ -5,21 +5,11 @@ This example illustrates how to perform filtered back-projection (FBP)
 image reconstruction in CT
 using the Julia language.
 
-This entire page was generated using a single Julia file:
-[1-fbp.jl](@__REPO_ROOT_URL__/ct/1-fbp.jl).
+This is under construction.
+See the demos in the Sinograms.jl package instead.
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`1-fbp.ipynb`](@__NBVIEWER_ROOT_URL__/ct/1-fbp.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`1-fbp.ipynb`](@__BINDER_ROOT_URL__/ct/1-fbp.ipynb),
-
-# This is under construction.
+#srcURL
 
 #=
 First we add the Julia packages that are need for these examples.
@@ -86,14 +76,4 @@ jim(kr, kϕ, abs.(data), title="k-space data magnitude",
 end
 =#
 
-
-# ## Reproducibility
-
-# This page was generated with the following version of Julia:
-
-io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
-
-
-# And with the following package versions
-
-import Pkg; Pkg.status()
+include("../../inc/reproduce.jl")
