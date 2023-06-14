@@ -1,8 +1,6 @@
-#---------------------------------------------------------
-# # [L+S 2D dynamic recon](@id 5-l-plus-s)
-#---------------------------------------------------------
-
 #=
+# [L+S 2D dynamic recon](@id 5-l-plus-s)
+
 This page illustrates dynamic parallel MRI image reconstruction
 using a low-rank plus sparse (L+S) model
 optimized by a fast algorithm
@@ -20,27 +18,15 @@ used in the original paper.
 
 If you use this code,
 please cite that paper.
-
-This page was generated from a single Julia file:
-[5-l-plus-s.jl](@__REPO_ROOT_URL__/mri/5-l-plus-s.jl).
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`5-l-plus-s.ipynb`](@__NBVIEWER_ROOT_URL__/mri/5-l-plus-s.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`5-l-plus-s.ipynb`](@__BINDER_ROOT_URL__/mri/5-l-plus-s.ipynb).
-
+#srcURL
 
 # ### Setup
 
 # Packages needed here.
 
-#using Unitful: s
+## using Unitful: s
 using Plots; default(markerstrokecolor=:auto, label="")
 using MIRT: Afft, Asense, embed
 using MIRT: pogm_restart, poweriter
@@ -63,7 +49,7 @@ isinteractive() ? jim(:prompt, true) : prompt(:draw);
 
 
 #=
-### Overview
+## Overview
 
 Dynamic image reconstruction
 using a "low-rank plus sparse"
@@ -78,7 +64,7 @@ X = \hat{L} + \hat{S}
 (\hat{L}, \hat{S})
 = \arg \min_{L,S} \frac{1}{2} \| E (L + S) - d \|_2^2
  + λ_L \| L \|_*
- + λ_S \| T S \|_1
+ + λ_S \| vec(T S) \|_1
 ```
 where ``T`` is a temporal unitary FFT,
 ``E`` is an encoding operator (system matrix),
@@ -381,3 +367,5 @@ plot!(0:niter, nrmsd_pogm, marker=:star, label="POGM")
 
 todo
 =#
+
+include("../../inc/reproduce.jl")

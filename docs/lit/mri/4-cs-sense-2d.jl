@@ -7,20 +7,9 @@ from Cartesian sampled MRI data
 for parallel MRI (sensitivity encoding)
 with 1-norm regularization of orthogonal wavelet coefficients,
 using the Julia language.
-
-This page was generated using a single Julia file:
-[4-cs-sense-2d.jl](@__REPO_ROOT_URL__/mri/4-cs-sense-2d.jl).
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`4-cs-sense-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/4-cs-sense-2d.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`4-cs-sense-2d.ipynb`](@__BINDER_ROOT_URL__/mri/4-cs-sense-2d.ipynb).
+#srcURL
 
 #=
 This demo is somewhat similar to Fig. 3 in the survey paper
@@ -390,13 +379,4 @@ The SNR
 =#
 
 
-# ### Reproducibility
-
-# This page was generated with the following version of Julia:
-
-io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
-
-
-# And with the following package versions:
-
-import Pkg; Pkg.status()
+include("../../inc/reproduce.jl")

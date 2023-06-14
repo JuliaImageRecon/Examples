@@ -6,20 +6,9 @@ This example illustrates how to perform
 from Cartesian sampled MRI data
 with 1-norm regularization of orthogonal wavelet coefficients,
 using the Julia language.
-
-This entire page was generated using a single Julia file:
-[2-cs-wl-l1-2d.jl](@__REPO_ROOT_URL__/mri/2-cs-wl-l1-2d.jl).
 =#
 
-#md # In any such Julia documentation,
-#md # you can access the source code
-#md # using the "Edit on GitHub" link in the top right.
-
-#md # The corresponding notebook can be viewed in
-#md # [nbviewer](https://nbviewer.org/) here:
-#md # [`2-cs-wl-l1-2d.ipynb`](@__NBVIEWER_ROOT_URL__/mri/2-cs-wl-l1-2d.ipynb),
-#md # and opened in [binder](https://mybinder.org/) here:
-#md # [`2-cs-wl-l1-2d.ipynb`](@__BINDER_ROOT_URL__/mri/2-cs-wl-l1-2d.ipynb).
+#srcURL
 
 #=
 This demo is somewhat similar to Fig. 3 in the survey paper
@@ -219,14 +208,4 @@ p6 = jim(Xpogm - Xtrue, "Xpogm error", clim=(0,2))
 pe = jim(p2, p3, p5, p6)
 
 
-
-# ### Reproducibility
-
-# This page was generated with the following version of Julia:
-
-io = IOBuffer(); versioninfo(io); split(String(take!(io)), '\n')
-
-
-# And with the following package versions:
-
-import Pkg; Pkg.status()
+include("../../inc/reproduce.jl")
