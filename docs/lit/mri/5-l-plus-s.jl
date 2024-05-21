@@ -27,7 +27,7 @@ please cite that paper.
 # Packages needed here.
 
 ## using Unitful: s
-using Plots; default(markerstrokecolor=:auto, label="")
+using Plots; cgrad, default(markerstrokecolor=:auto, label="")
 using MIRT: Afft, Asense, embed
 using MIRT: pogm_restart, poweriter
 using MIRTjim: jim, prompt
@@ -122,6 +122,18 @@ if !@isdefined(samp)
        xlabel=L"k_x", ylabel=L"k_y")
 end
 
+#=
+Are all k-space rows are sampled in one of the 40 frames?
+Sadly no.
+The 10 blue rows shown below are never sampled.
+A better sampling pattern design
+could have avoided this issue.
+=#
+samp_sum = sum(samp, dims=3)
+color = cgrad([:blue, :black, :white], [0, 1/2nt, 1])
+pssum = jim(kx, ky, samp_sum; xlabel="kx", ylabel="ky",
+    color, clim=(0,nt), title="Number of sampled frames out of $nt")
+
 # Prepare coil sensitivity maps
 if !@isdefined(smaps)
     smaps_raw = data["b1"] # raw coil sensitivity maps
@@ -213,7 +225,7 @@ end
 
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
-scale = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
+scale0 = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
 
 # Crude initial image
 L0 = A' * ydata # adjoint (zero-filled)
