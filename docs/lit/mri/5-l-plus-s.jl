@@ -90,7 +90,7 @@ based on the
 
 # ## Read data
 if !@isdefined(data)
-#   url = "https://web.eecs.umich.edu/~fessler/irt/reproduce/19/lin-19-edp/data/"
+#src url = "https://web.eecs.umich.edu/~fessler/irt/reproduce/19/lin-19-edp/data/"
     url = "https://github.com/JeffFessler/MIRTdata/raw/main/mri/lin-19-edp/"
     dataurl = url * "cardiac_perf_R8.mat"
     data = matread(Downloads.download(dataurl))
