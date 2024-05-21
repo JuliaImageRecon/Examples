@@ -27,7 +27,7 @@ please cite that paper.
 # Packages needed here.
 
 ## using Unitful: s
-using Plots; default(markerstrokecolor=:auto, label="")
+using Plots; cgrad, default(markerstrokecolor=:auto, label="")
 using MIRT: Afft, Asense, embed
 using MIRT: pogm_restart, poweriter
 using MIRTjim: jim, prompt
@@ -90,7 +90,8 @@ based on the
 
 # ## Read data
 if !@isdefined(data)
-    url = "https://web.eecs.umich.edu/~fessler/irt/reproduce/19/lin-19-edp/data/"
+#src url = "https://web.eecs.umich.edu/~fessler/irt/reproduce/19/lin-19-edp/data/"
+    url = "https://github.com/JeffFessler/MIRTdata/raw/main/mri/lin-19-edp/"
     dataurl = url * "cardiac_perf_R8.mat"
     data = matread(Downloads.download(dataurl))
     xinfurl = url * "Xinf.mat"
@@ -98,7 +99,7 @@ if !@isdefined(data)
 end;
 
 # Show converged image as a preview:
-jim(Xinf, L"\mathrm{Converged\ image\ } X_∞")
+pinf = jim(Xinf, L"\mathrm{Converged\ image\ sequence } X_∞")
 
 # Organize k-space data:
 if !@isdefined(ydata0)
@@ -117,8 +118,21 @@ if !@isdefined(samp)
     end
     kx = -(nx÷2):(nx÷2-1)
     ky = -(ny÷2):(ny÷2-1)
-    jim(kx, ky, samp, "Sampling patterns for $nt frames"; xlabel=L"k_x", ylabel=L"k_y")
+    psamp = jim(kx, ky, samp, "Sampling patterns for $nt frames";
+       xlabel=L"k_x", ylabel=L"k_y")
 end
+
+#=
+Are all k-space rows are sampled in one of the 40 frames?
+Sadly no.
+The 10 blue rows shown below are never sampled.
+A better sampling pattern design
+could have avoided this issue.
+=#
+samp_sum = sum(samp, dims=3)
+color = cgrad([:blue, :black, :white], [0, 1/2nt, 1])
+pssum = jim(kx, ky, samp_sum; xlabel="kx", ylabel="ky",
+    color, clim=(0,nt), title="Number of sampled frames out of $nt")
 
 # Prepare coil sensitivity maps
 if !@isdefined(smaps)
@@ -130,7 +144,7 @@ if !@isdefined(smaps)
     smaps = smaps_raw ./ ssos_raw
     ssos = ssos_fun(smaps)
     @assert all(≈(1), ssos)
-    jim(smaps, "Normalized |coil maps| for $nc coils")
+    pmap = jim(smaps, "Normalized |coil maps| for $nc coils")
 end
 
 
@@ -156,7 +170,7 @@ because Xinf was reconstructed
 using this regularizer!
 =#
 tmp = TF * Xinf
-jim(tmp, "|Temporal FFT of Xinf|")
+ptfft = jim(tmp, "|Temporal FFT of Xinf|")
 
 
 #=
@@ -211,7 +225,7 @@ end
 
 # Check scale factor of Xinf. (It should be ≈1.)
 tmp = A * Xinf
-scale = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
+scale0 = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
 
 # Crude initial image
 L0 = A' * ydata # adjoint (zero-filled)
@@ -221,7 +235,7 @@ L0 = A' * ydata # adjoint (zero-filled)
 S0 = zeros(ComplexF32, nx, ny, nt)
 X0 = cat(L0, S0, dims=ndims(L0)+1) # (nx, ny, nt, 2) = (128, 128, 40, 2)
 M0 = AII * X0 # L0 + S0
-jim(M0, "|Initial L+S via zero-filled recon|")
+pm0 = jim(M0, "|Initial L+S via zero-filled recon|")
 
 
 #=

@@ -1,6 +1,7 @@
 execute = isempty(ARGS) || ARGS[1] == "run"
 
-org, reps = :JuliaImageRecon, "Examples"
+org, reps = :JuliaImageRecon, :Examples
+eval(:(using $reps))
 import Documenter
 import Literate
 
@@ -20,6 +21,7 @@ nbviewer_root_url =
 binder_root_url =
     "https://mybinder.org/v2/gh/$base/gh-pages?filepath=generated"
 
+repo = eval(:($reps))
 # preprocessing
 inc1 = "include(\"../../inc/reproduce.jl\")"
 
@@ -77,7 +79,6 @@ Documenter.makedocs(;
     authors = "Jeff Fessler and contributors",
     sitename = "Examples",
     format,
-    strict = true, # fail on "warnings"
     pages = [
         "Home" => "index.md",
         "MRI" => pages("mri"),
@@ -92,6 +93,7 @@ if isci
         versions = nothing,
         forcepush = true,
         push_preview = true,
+        # see https://$org.github.io/$repo.jl/previews/PR##
     )
 else
     @warn "may need to: rm -r src/generated/"
