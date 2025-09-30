@@ -75,6 +75,7 @@ FOV = 256mm # physical units!
 Δx = FOV / N # pixel size
 kmax = 1 / 2Δx
 kr = ((-N÷2):(N÷2)) / (N÷2) * kmax # radial sampling in k-space
+Nr = length(kr) # N+1
 Nϕ = 3N÷2 # theoretically should be about π/2 * N
 kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
 νx = kr * cos.(kϕ)' # N × Nϕ k-space sampling in cycles/mm
@@ -124,14 +125,17 @@ object = shepp_logan(SheppLoganEmis(); fovs=(FOV,FOV))
 #object = [Gauss2(18mm, 0mm, 100mm, 70mm, 0, 1)] # useful for validating DCF
 data = spectrum(object).(νx,νy)
 data = data / oneunit(eltype(data)) # abandon units at this point
-jim(kr, kϕ, abs.(data), title="k-space data magnitude",
-    xlabel=L"k_r",
-    ylabel=L"k_{\phi}",
+dscale = 10000
+jimk = (args...; kwargs...) -> jim(kr, kϕ, args...;
+    xlabel = L"k_r",
+    ylabel = L"k_{\phi}",
     xticks = (-1:1) .* maximum(abs, kr),
     yticks = (0,π),
     ylims = (0,π),
     aspect_ratio = :none,
+    kwargs...
 )
+pk = jimk(abs.(data) / dscale; title="k-space data magnitude / $dscale")
 
 
 #=
@@ -209,10 +213,19 @@ defined in MIRT
 that provides a non-Cartesian Fourier encoding "matrix".
 =#
 
-A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2])
+A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2]) # todo: odim=(Nr,Nϕ)
+
+# Verify that the operator `A` works properly:
+dx = FOV / N # pixel size
+dx = dx / oneunit(dx) # abandon units for now
+Ax_to_y = Ax -> dx^2 * reshape(Ax, Nr, Nϕ) # trick
+pj1 = jimk(abs.(Ax_to_y(A * ideal)) / dscale, "|A*x|/$dscale")
+pj2 = jimk(abs.(Ax_to_y(A * ideal) - data) / dscale, "|A*x-y|/$dscale")
+plot(pj1, pj2)
 
 #=
-This linear map is constructed to map a N × N image into `length(Ωx)` k-space samples.
+This linear map is constructed to map a N × N image
+into `length(Ωx)` k-space samples.
 So its
 [adjoint](https://en.wikipedia.org/wiki/Adjoint)
 goes the other direction.
@@ -298,10 +311,12 @@ CG is well-suited to minimizing quadratic cost functions,
 but we do not expect the image to be great quality
 because radial sampling omits the "corners" of k-space
 so the NUFFT operator ``A`` is badly conditioned.
+
+There is a subtle point here about `dx`
+when converting the Fourier integral to a sum.
+Here `y` is `data/dx^2`.
 =#
 
-dx = FOV / N # pixel size
-dx = dx / oneunit(dx) # abandon units for now
 gradf = u -> u - vec(data/dx^2) # gradient of f(u) = 1/2 \| u - y \|^2
 curvf = u -> 1 # curvature of f(u)
 x0 = gridded4 # initial guess: best gridding reconstruction
@@ -351,6 +366,17 @@ ecolor = :cividis
 p5e = jim(x, y, abs.(xls - ideal), "|LS-CG error|"; clim=elim, color=ecolor)
 p6e = jim(x, y, abs.(xtik - ideal), "|Tik error|"; clim=elim, color=ecolor)
 plot(p5e, p6e; size=(800,300))
+
+
+# Errors in k-space
+#src logger = (x; min=-6) -> log10.(max.(abs.(x) / maximum(abs, x), (10.)^min))
+#src p5f = jimk(logger(Ax_to_y(A * xls)), "|LS-CG kspace|")
+#src p6f = jimk(logger(Ax_to_y(A * xtik)), "|Tik. kspace|")
+p5f = jimk(abs.(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
+p6f = jimk(abs.(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
+#src p5f = jimk(logger(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
+#src p6f = jimk(logger(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
+p56f = plot(p5f, p6f)
 
 
 #=
