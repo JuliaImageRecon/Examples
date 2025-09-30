@@ -46,6 +46,7 @@ end
 # Run `Pkg.add()` in the preceding code block first, if needed.
 
 using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
+using LinearAlgebra: I
 using Unitful: mm # Allows use of physical units (mm here)
 using Plots; default(label="", markerstrokecolor=:auto)
 using LaTeXStrings # for LaTeX in plot labels, e.g., L"\alpha_n"
@@ -74,6 +75,7 @@ FOV = 256mm # physical units!
 Δx = FOV / N # pixel size
 kmax = 1 / 2Δx
 kr = ((-N÷2):(N÷2)) / (N÷2) * kmax # radial sampling in k-space
+Nr = length(kr) # N+1
 Nϕ = 3N÷2 # theoretically should be about π/2 * N
 kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
 νx = kr * cos.(kϕ)' # N × Nϕ k-space sampling in cycles/mm
@@ -123,14 +125,17 @@ object = shepp_logan(SheppLoganEmis(); fovs=(FOV,FOV))
 #object = [Gauss2(18mm, 0mm, 100mm, 70mm, 0, 1)] # useful for validating DCF
 data = spectrum(object).(νx,νy)
 data = data / oneunit(eltype(data)) # abandon units at this point
-jim(kr, kϕ, abs.(data), title="k-space data magnitude",
-    xlabel=L"k_r",
-    ylabel=L"k_{\phi}",
+dscale = 10000
+jimk = (args...; kwargs...) -> jim(kr, kϕ, args...;
+    xlabel = L"k_r",
+    ylabel = L"k_{\phi}",
     xticks = (-1:1) .* maximum(abs, kr),
     yticks = (0,π),
     ylims = (0,π),
     aspect_ratio = :none,
+    kwargs...
 )
+pk = jimk(abs.(data) / dscale; title="k-space data magnitude / $dscale")
 
 
 #=
@@ -208,10 +213,19 @@ defined in MIRT
 that provides a non-Cartesian Fourier encoding "matrix".
 =#
 
-A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2])
+A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2]) # todo: odim=(Nr,Nϕ)
+
+# Verify that the operator `A` works properly:
+dx = FOV / N # pixel size
+dx = dx / oneunit(dx) # abandon units for now
+Ax_to_y = Ax -> dx^2 * reshape(Ax, Nr, Nϕ) # trick
+pj1 = jimk(abs.(Ax_to_y(A * ideal)) / dscale, "|A*x|/$dscale")
+pj2 = jimk(abs.(Ax_to_y(A * ideal) - data) / dscale, "|A*x-y|/$dscale")
+plot(pj1, pj2)
 
 #=
-This linear map is constructed to map a N × N image into `length(Ωx)` k-space samples.
+This linear map is constructed to map a N × N image
+into `length(Ωx)` k-space samples.
 So its
 [adjoint](https://en.wikipedia.org/wiki/Adjoint)
 goes the other direction.
@@ -297,18 +311,22 @@ CG is well-suited to minimizing quadratic cost functions,
 but we do not expect the image to be great quality
 because radial sampling omits the "corners" of k-space
 so the NUFFT operator ``A`` is badly conditioned.
+
+There is a subtle point here about `dx`
+when converting the Fourier integral to a sum.
+Here `y` is `data/dx^2`.
 =#
 
-dx = FOV / N # pixel size
-dx = dx / oneunit(dx) # abandon units for now
 gradf = u -> u - vec(data/dx^2) # gradient of f(u) = 1/2 \| u - y \|^2
 curvf = u -> 1 # curvature of f(u)
 x0 = gridded4 # initial guess: best gridding reconstruction
 xls, _ = ncg([A], [gradf], [curvf], x0; niter = 20)
-p5 = jim(x, y, xls, "LS-CG reconstruction"; clim)
+p5 = jim(x, y, xls, "|LS-CG reconstruction|"; clim)
 
 
 #=
+## Regularized MR image reconstruction
+
 To improve the results, we include regularization.
 Here we would like to reconstruct an image
 by finding the minimizer of a regularized LS cost function
@@ -318,10 +336,56 @@ such as the following:
 , \qquad
 R(x) = 1' \psi.(T x).
 ```
-We focus here on the case of edge-preserving regularization
+=#
+
+
+#=
+### Tikhonov regularization
+
+The simplest option is Tikhonov regularization,
+where
+``R(x) = (β_0/2) \| x \|_2^2,``
+corresponding to ``T = I``
+and ``ϕ(z) = (β_0/2) | z |^2``
+above.
+=#
+
+β₀ = 1e-0
+xtik, _ = ncg([A, sqrt(β₀)*I], [gradf, x -> β₀*x], [curvf, x -> β₀], x0; niter = 80)
+p6 = jim(x, y, xtik, "|Tikhonov Regularized|"; clim)
+
+
+#=
+Comparing the error images
+with the same grayscale window,
+the regularized reconstruction
+has somewhat lower errors.
+=#
+elim = (0, 1)
+ecolor = :cividis
+p5e = jim(x, y, abs.(xls - ideal), "|LS-CG error|"; clim=elim, color=ecolor)
+p6e = jim(x, y, abs.(xtik - ideal), "|Tik error|"; clim=elim, color=ecolor)
+plot(p5e, p6e; size=(800,300))
+
+
+# Errors in k-space
+#src logger = (x; min=-6) -> log10.(max.(abs.(x) / maximum(abs, x), (10.)^min))
+#src p5f = jimk(logger(Ax_to_y(A * xls)), "|LS-CG kspace|")
+#src p6f = jimk(logger(Ax_to_y(A * xtik)), "|Tik. kspace|")
+p5f = jimk(abs.(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
+p6f = jimk(abs.(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
+#src p5f = jimk(logger(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
+#src p6f = jimk(logger(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
+p56f = plot(p5f, p6f)
+
+
+#=
+### Edge-preserving regularization
+
+Now consider edge-preserving regularization
 where ``T`` is a 2D finite-differencing operator
-and ``\psi`` is a potential function.
-This operator maps a N×N image into a N×N×2 array
+and ``ψ`` is a potential function.
+This operator maps a ``N×N`` image into a ``N×N×2`` array
 with the horizontal and vertical finite differences.
 =#
 
@@ -329,7 +393,8 @@ T = diffl_map((N,N), [1,2] ; T = ComplexF32)
 
 
 # Applying this operator to the ideal image illustrated its action:
-jim(x, y, T * ideal; ncol=1, title="Horizontal and vertical finite differences")
+p7 = jim(x, y, T * ideal; nrow=1, size = (600, 300),
+ title="Horizontal and vertical finite differences")
 
 
 #=
@@ -364,8 +429,13 @@ gradf = [u -> u - vec(data/dx^2), # data-term gradient, correct for pixel area
 curvf = [u -> 1, u -> β] # curvature of quadratic majorizers
 x0 = gridded4 # initial guess is best gridding reconstruction
 xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
-p6 = jim(x, y, xhat, "Iterative reconstruction"; clim)
+p8 = jim(x, y, xhat, "Iterative reconstruction"; clim)
 
+
+# Compare the error images:
+
+p8e = jim(x, y, abs.(xhat - ideal), "|Reg. error|"; clim=elim, color=ecolor)
+p568e = plot(p5e, p6e, p8e; layout=(1,3), size=(1200,300))
 
 # Here is a comparison of the profiles.
 
