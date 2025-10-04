@@ -346,7 +346,7 @@ The simplest option is Tikhonov regularization,
 where
 ``R(x) = (β_0/2) \| x \|_2^2,``
 corresponding to ``T = I``
-and ``ϕ(z) = (β_0/2) | z |^2``
+and ``ψ(z) = (β_0/2) | z |^2``
 above.
 =#
 
