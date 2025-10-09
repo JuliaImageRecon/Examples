@@ -37,7 +37,7 @@ using MAT: matread
 import Downloads # todo: use Fetch or DataDeps?
 using LinearAlgebra: dot, norm, svd, svdvals, Diagonal, I
 using Random: seed!
-using StatsBase: mean
+using Statistics: mean
 using LaTeXStrings
 
 
