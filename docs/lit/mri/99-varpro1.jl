@@ -26,7 +26,6 @@ using LinearAlgebra: norm, Diagonal, diag, diagm
 using MIRTjim: jim
 using Random: seed!; seed!(0)
 using Unitful: @u_str, uconvert, ustrip, ms, s, mm
-using BenchmarkTools: @benchmark
 using InteractiveUtils: versioninfo
 
 
