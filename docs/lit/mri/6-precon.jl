@@ -39,7 +39,7 @@ end
 
 using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
 using LaTeXStrings
-using LinearAlgebra: I
+using LinearAlgebra: I, norm
 using MIRTjim: jim, prompt # jiffy image display
 using MIRT: Anufft, diffl_map, ncg
 using Plots; default(label="", markerstrokecolor=:auto)
@@ -138,101 +138,49 @@ p0 = jim(x, y, ideal; title="True Shepp-Logan phantom", clim)
 #
 isinteractive() && prompt();
 
-throw()
-
 #=
-## NUFFT approach to gridding
-
-Basic nearest-neighbor gridding
-does not provide acceptable image quality in MRI,
-so now we turn to using the NUFFT.
-For MRI purposes,
-the NUFFT is a function that maps Cartesian spaced image data
-into non-Cartesian k-space data.
-The
-[NFFT.jl](https://github.com/tknopp/NFFT.jl)
-package has functions
-for computing the NUFFT and its adjoint.
-These are linear mappings (generalizations of matrices),
-so instead of calling those functions directly,
-here we use the NUFFT linear map object
-defined in MIRT
-that provides a non-Cartesian Fourier encoding "matrix".
+## NUFFT operator
+with sanity check
 =#
 
 A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2]) # todo: odim=(Nr,Nϕ)
-
-# Verify that the operator `A` works properly:
 dx = FOV / N # pixel size
 dx = dx / oneunit(dx) # abandon units for now
 Ax_to_y = Ax -> dx^2 * reshape(Ax, Nr, Nϕ) # trick
 pj1 = jimk(abs.(Ax_to_y(A * ideal)) / dscale, "|A*x|/$dscale")
 pj2 = jimk(abs.(Ax_to_y(A * ideal) - data) / dscale, "|A*x-y|/$dscale")
-plot(pj1, pj2)
+plot(pk, pj1, pj2)
 
-#=
-This linear map is constructed to map a N × N image
-into `length(Ωx)` k-space samples.
-So its
-[adjoint](https://en.wikipedia.org/wiki/Adjoint)
-goes the other direction.
-However, an adjoint is *not* an inverse!
-=#
-
-gridded2 = A' * vec(data)
-jim(x, y, gridded2, title="NUFFT gridding without DCF")
+#
+isinteractive() && prompt();
 
 
 #=
 ## Density compensation
 
-To get a decent image with NUFFT-based gridding of non-Cartesian data,
-one must compensate for the k-space sampling density.
-See
-[this book chapter](https://web.eecs.umich.edu/~fessler/book/c-four.pdf)
-for details.
+Radial sampling needs
+(N+1) DSF weights along k-space polar coordinate.
 
-Because this example uses radial sampling,
-we can borrow ideas from tomography,
-especially the
-[ramp filter](https://en.wikipedia.org/wiki/Radon_transform#Radon_inversion_formula),
-to define a reasonable density compensation function (DCF).
-
-Here is a basic DCF version that uses the ramp filter in a simple way,
-corresponding to the areas of annular segments
-(Voronoi cells in polar coordinates).
-The `dcf .* data` line uses Julia's
-[broadcast](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
-feature
-to apply the 1D DCF to each radial spoke.
-=#
-
-dν = 1/FOV # k-space radial sample spacing
-dcf = pi / Nϕ * dν * abs.(kr) # (N+1) weights along k-space polar coordinate
-dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
-gridded3 = A' * vec(dcf .* data)
-p3 = jim(x, y, gridded3, title="NUFFT gridding with simple ramp-filter DCF"; clim)
-
-
-#=
-The image is more reasonable than without any DCF,
-but we can do better (quantitatively) using the correction of
+We use the improved method of
 [Lauzon&Rutt, 1996](https://doi.org/10.1002/mrm.1910360617)
 and
 [Joseph, 1998](https://doi.org/10.1002/mrm.1910400317).
 =#
 
-dcf = pi / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
-dcf[kr .== 0/mm] .= pi * (dν/2)^2 / Nϕ # area of center disk
+dν = 1/FOV # k-space radial sample spacing
+dcf = π / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
+dcf[kr .== 0/mm] .= π * (dν/2)^2 / Nϕ # area of center disk
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded4 = A' * vec(dcf .* data)
 p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF"; clim)
 
+#
+isinteractive() && prompt();
 
-# A profile helps illustrate the improvement.
+
+# A profile shows it is "decent" but not amazing.
 
 pp = plot(x, real(gridded4[:,N÷2]), label="Modified ramp DCF")
-plot!(x, real(gridded3[:,N÷2]), label="Basic ramp DCF")
 plot!(x, real(ideal[:,N÷2]), label="Ideal", xlabel=L"x", ylabel="middle profile")
 
 #
@@ -240,178 +188,99 @@ isinteractive() && prompt();
 
 
 #=
-Finally we have made a NUFFT gridded image with DCF
-that has the appropriate range of values,
-but it still looks less than ideal.
-So next we try an iterative approach.
+## Unregularized iterative MRI reconstruction
 
-
-## Iterative MR image reconstruction using NUFFT
-
-As an initial iterative approach,
-let's apply a few iterations of conjugate gradient (CG)
-to seek the minimizer of the least-squares cost function:
+Apply a few iterations of conjugate gradient (CG)
+to approach a minimizer of the least-squares cost function:
 ```math
-\arg \min_{x} \frac{1}{2} \| A x - y \|_2^2.
+\arg \min_{x} \frac{1}{2} ‖ A x - y ‖₂².
 ```
-CG is well-suited to minimizing quadratic cost functions,
-but we do not expect the image to be great quality
-because radial sampling omits the "corners" of k-space
-so the NUFFT operator ``A`` is badly conditioned.
+
+Using a zero-image as the starting point ``x₀``
+leads to slow convergence.
+
+Using "preconditioning" by including DCF values
+in the cost function
+(a kind of weighted LS)
+appears to give much faster convergence,
+but leads to suboptimal image quality
+especially in the presence of noise.
+
+Using a decent initial image
+(e.g., a gridded image with appropriate scaling)
+is preferable.
 
 There is a subtle point here about `dx`
 when converting the Fourier integral to a sum.
-Here `y` is `data/dx^2`.
+Here `yideal` is `data/dx^2`.
 =#
 
-gradf = u -> u - vec(data/dx^2) # gradient of f(u) = 1/2 \| u - y \|^2
+nrmse = x -> norm(x - ideal) / norm(ideal) * 100
+fun = (x, iter) -> nrmse(x)
+
+snr2sigma(db, y) = 10^(-db/20) * norm(y) / sqrt(length(y))
+yideal = vec(data/dx^2)
+σnoise = snr2sigma(40, yideal)
+ydata = yideal + σnoise * randn(eltype(yideal), size(yideal))
+snr = 20 * log10(norm(yideal) / norm(ydata - yideal)) # check
+gradf = u -> u - ydata # gradient of f(u) = 1/2 ‖ u - y ‖²
 curvf = u -> 1 # curvature of f(u)
-x0 = gridded4 # initial guess: best gridding reconstruction
-xls, _ = ncg([A], [gradf], [curvf], x0; niter = 20)
-p5 = jim(x, y, xls, "|LS-CG reconstruction|"; clim)
 
+x0 = 0 * ideal
+niter = 15
+xls0, out0 = ncg([A], [gradf], [curvf], x0; niter, fun)
 
-#=
-## Regularized MR image reconstruction
+default(linewidth = 2)
+ppr = plot(
+ xaxis = ("iteration", (0, niter)),
+ yaxis = ("NRMSE", (0, 100), 0:20:100),
+ widen = true,
+)
+plot!(ppr, 0:niter, out0,
+ label = "Non-preconditioned, 0 init", color = :red, marker = :circle,
+);
 
-To improve the results, we include regularization.
-Here we would like to reconstruct an image
-by finding the minimizer of a regularized LS cost function
-such as the following:
-```math
-\arg \min_{x} \frac{1}{2} \| A x - y \|_2^2 + \beta R(x)
-, \qquad
-R(x) = 1' \psi.(T x).
-```
-=#
+# "Preconditioned" version
+precon = vec(repeat(dcf, Nϕ));
 
+# gradient of fp(u) = 1/2 ‖ P^{1/2} (u - y) ‖²
+gradfp = u -> precon .* (u - ydata)
+curvfp = u -> precon # curvature of fp(u)
 
-#=
-### Tikhonov regularization
+xlsp, out2 = ncg([A], [gradfp], [curvfp], x0; niter, fun)
+plot!(ppr, 0:niter, out2,
+ label = "DCF preconditioned, 0 init", color = :blue, marker = :x,
+)
+#src savefig(ppr, "precon0.pdf")
 
-The simplest option is Tikhonov regularization,
-where
-``R(x) = (β_0/2) \| x \|_2^2,``
-corresponding to ``T = I``
-and ``ψ(z) = (β_0/2) | z |^2``
-above.
-=#
+# Smart start with gridded image
+x0 = gridded4 # initial guess: decent gridding reconstruction
+xls1, out1 = ncg([A], [gradf], [curvf], x0; niter, fun)
+plot!(ppr, 0:niter, out1,
+  label = "Non-preconditioned, gridding init", color=:green, marker=:+,
+)
 
-β₀ = 1e-0
-xtik, _ = ncg([A, sqrt(β₀)*I], [gradf, x -> β₀*x], [curvf, x -> β₀], x0; niter = 80)
-p6 = jim(x, y, xtik, "|Tikhonov Regularized|"; clim)
-
-
-#=
-Comparing the error images
-with the same grayscale window,
-the regularized reconstruction
-has somewhat lower errors.
-=#
-elim = (0, 1)
-ecolor = :cividis
-p5e = jim(x, y, abs.(xls - ideal), "|LS-CG error|"; clim=elim, color=ecolor)
-p6e = jim(x, y, abs.(xtik - ideal), "|Tik error|"; clim=elim, color=ecolor)
-plot(p5e, p6e; size=(800,300))
-
-
-# Errors in k-space
-#src logger = (x; min=-6) -> log10.(max.(abs.(x) / maximum(abs, x), (10.)^min))
-#src p5f = jimk(logger(Ax_to_y(A * xls)), "|LS-CG kspace|")
-#src p6f = jimk(logger(Ax_to_y(A * xtik)), "|Tik. kspace|")
-p5f = jimk(abs.(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
-p6f = jimk(abs.(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
-#src p5f = jimk(logger(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
-#src p6f = jimk(logger(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
-p56f = plot(p5f, p6f)
-
-
-#=
-### Edge-preserving regularization
-
-Now consider edge-preserving regularization
-where ``T`` is a 2D finite-differencing operator
-and ``ψ`` is a potential function.
-This operator maps a ``N×N`` image into a ``N×N×2`` array
-with the horizontal and vertical finite differences.
-=#
-
-T = diffl_map((N,N), [1,2] ; T = ComplexF32)
-
-
-# Applying this operator to the ideal image illustrated its action:
-p7 = jim(x, y, T * ideal; nrow=1, size = (600, 300),
- title="Horizontal and vertical finite differences")
-
-
-#=
-## Edge-preserving regularization
-
-We use the Fair potential function:
-a rounded corner version of absolute value,
-an approximation to anisotropic total variation (TV).
-=#
-
-β = 2^13 # regularization parameter
-δ = 0.05 # edge-preserving parameter
-wpot = z -> 1 / (1 + abs(z)/δ) # weighting function
-
-
-#=
-## Nonlinear CG algorithm
-
-We apply a (nonlinear) CG algorithm
-to seek the minimizer of the cost function.
-Nonlinear CG is well suited to convex problems
-that are locally quadratic
-like the regularized cost function considered here.
-See
-[this survey paper](https://doi.org/10.1109/MSP.2019.2943645)
-for an overview of optimization methods for MRI.
-=#
-
-B = [A, T] # see MIRT.ncg
-gradf = [u -> u - vec(data/dx^2), # data-term gradient, correct for pixel area
-         u -> β * (u .* wpot.(u))] # regularizer gradient
-curvf = [u -> 1, u -> β] # curvature of quadratic majorizers
-x0 = gridded4 # initial guess is best gridding reconstruction
-xhat, _ = ncg(B, gradf, curvf, x0; niter = 90)
-p8 = jim(x, y, xhat, "Iterative reconstruction"; clim)
-
-
-# Compare the error images:
-
-p8e = jim(x, y, abs.(xhat - ideal), "|Reg. error|"; clim=elim, color=ecolor)
-p568e = plot(p5e, p6e, p8e; layout=(1,3), size=(1200,300))
-
-# Here is a comparison of the profiles.
-
-plot!(pp, x, real(xls[:,N÷2]), label="LS-CG")
-plot!(pp, x, real(xhat[:,N÷2]), label="Iterative edge-preserving", color=:black)
+#src savefig(ppr, "precon1.pdf")
 
 #
 isinteractive() && prompt();
 
-#=
-In this case, iterative image reconstruction provides the best looking image.
-One might argue this simulation was doomed to succeed,
-because the phantom is piece-wise constant,
-which is the best case for edge-preserving regularization.
-On the other hand,
-this was not an
-[inverse crime](https://doi.org/10.1016/j.cam.2005.09.027)
-([see also here](https://arxiv.org/abs/2109.08237))
-because the k-space data came from the analytical spectrum of ellipses,
-rather than from a discrete image.
+# The images look very similar at 15 iterations
 
+elim = (0, 1)
+tmp = stack((ideal, xls0, xlsp, xls1))
+err = stack((ideal, xls0, xlsp, xls1)) .- ideal
+p5 = plot(
+ jim(x, y, tmp; title = "Ideal | 0 init | precon | grid init",
+  clim, nrow=1, size = (600, 200)),
+ jim(x, y, err; title = "Error", color=:cividis,
+  clim = elim, nrow=1, size = (600, 200)),
+ layout = (2, 1),
+ size = (650, 450),
+)
 
-### Caveats
+#
+isinteractive() && prompt();
 
-* The phantom used here was real-valued, which is unrealistic
-  (although the reconstruction methods did not "know" it was real).
-* This simulation is for a single-coil scan
-  whereas modern MRI scanners generally use multiple receive coils.
-* There was no statistical noise in this simulation.
-=#
 
 include("../../inc/reproduce.jl")
