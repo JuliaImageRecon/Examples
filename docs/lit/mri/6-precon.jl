@@ -3,18 +3,27 @@
 
 This example illustrates
 how "preconditioning" based on sampling
-density compensation factors (DCF)
- how to use Nonuniform FFT (NUFFT)
-for image reconstruction in MRI
+density compensation factors (DCFs)
+affects image reconstruction in MRI
 using the Julia language.
 =#
 
 #srcURL
 
 #=
-todo: describe
+The bottom line here
+is that DCF-based preconditioning
+gives an apparent speed-up
+when staring from a zero initial image,
+but leads to increased noise (worse error).
+Choosing a smart starting image,
+like an appropriately scaled gridding image,
+provides comparable speed-up
+without compromising noise.
+=#
 
 
+#=
 First we add the Julia packages that are need for these examples.
 Change `false` to `true` in the following code block
 if you are using any of the following packages for the first time.
@@ -43,6 +52,7 @@ using LinearAlgebra: I, norm
 using MIRTjim: jim, prompt # jiffy image display
 using MIRT: Anufft, diffl_map, ncg
 using Plots; default(label="", markerstrokecolor=:auto)
+using Random: seed!; seed!(0)
 using Unitful: mm # physical units (mm here)
 using InteractiveUtils: versioninfo
 
