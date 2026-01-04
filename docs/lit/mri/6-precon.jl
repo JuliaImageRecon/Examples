@@ -32,13 +32,13 @@ if you are using any of the following packages for the first time.
 if false
     import Pkg
     Pkg.add([
+        "InteractiveUtils"
         "ImagePhantoms"
-        "Unitful"
-        "Plots"
         "LaTeXStrings"
         "MIRTjim"
         "MIRT"
-        "InteractiveUtils"
+        "Plots"
+        "Unitful"
     ])
 end
 
@@ -83,15 +83,17 @@ Nϕ = N-2 # theoretically should be about π/2 * N
 kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
 νx = kr * cos.(kϕ)' # N × Nϕ k-space sampling in cycles/mm
 νy = kr * sin.(kϕ)'
-plot(νx, νy,
-    xaxis = (L"\nu_x", (-1,1) .* (1.1 * kmax), (-1:1)*kmax),
-    yaxis = (L"\nu_y", (-1,1) .* (1.1 * kmax), (-1:1)*kmax),
+psamp = plot(νx, νy, size = (420,400),
+    xaxis = (L"\nu_{\mathrm{x}}", (-1,1) .* (1.1 * kmax), (-1:1) * kmax),
+    yaxis = (L"\nu_{\mathrm{y}}", (-1,1) .* (1.1 * kmax), (-1:1) * kmax),
     aspect_ratio = 1,
     title = "Radial k-space sampling",
 )
 
 #
 isinteractive() && prompt();
+#src savefig(psamp, "sampling.pdf")
+
 
 #=
 For the NUFFT routines considered here,
@@ -102,7 +104,7 @@ digital frequencies have pseudo-units of radians / pixel.
 Ωx = (2π * Δx) * νx # N × Nϕ grid of k-space sample locations
 Ωy = (2π * Δx) * νy # in pseudo-units of radians / sample
 
-scatter(Ωx, Ωy,
+pom = scatter(Ωx, Ωy,
     xaxis = (L"\Omega_x", (-1,1) .* 1.1π, ((-1:1)*π, ["-π", "0", "π"])),
     yaxis = (L"\Omega_y", (-1,1) .* 1.1π, ((-1:1)*π, ["-π", "0", "π"])),
     aspect_ratio = 1, markersize = 0.5,
@@ -143,10 +145,13 @@ x = (-(N÷2):(N÷2-1)) * Δx
 y = (-(N÷2):(N÷2-1)) * Δx
 ideal = phantom(x, y, object, 2)
 clim = (0, 9)
-p0 = jim(x, y, ideal; title="True Shepp-Logan phantom", clim)
+p0 = jim(x, y, ideal; xlabel=L"x", ylabel=L"y", clim, size = (460,400),
+ title="True Shepp-Logan phantom")
 
 #
 isinteractive() && prompt();
+#src savefig(p0, "ideal.pdf")
+
 
 #=
 ## NUFFT operator
@@ -182,10 +187,13 @@ dcf = π / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
 dcf[kr .== 0/mm] .= π * (dν/2)^2 / Nϕ # area of center disk
 dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
 gridded4 = A' * vec(dcf .* data)
-p4 = jim(x, y, gridded4, title="NUFFT gridding with better ramp-filter DCF"; clim)
+p4 = jim(x, y, gridded4; xlabel=L"x", ylabel=L"y", clim,
+ size = (460,400),
+ title="NUFFT gridding with better ramp-filter DCF")
 
 #
 isinteractive() && prompt();
+#src savefig(p4, "gridding.pdf")
 
 
 # A profile shows it is "decent" but not amazing.
