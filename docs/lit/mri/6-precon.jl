@@ -255,10 +255,11 @@ ppr = plot(
  widen = true,
 )
 plot!(ppr, 0:niter, out0,
- label = "Non-preconditioned, 0 init", color = :red, marker = :circle,
+ label = "LS-CG ('non-preconditioned'), 0 init",
+ color = :black, marker = :circle,
 );
 
-# "Preconditioned" version
+# "Preconditioned" (aka "weighted") version
 precon = vec(repeat(dcf, Nϕ));
 
 # gradient of fp(u) = 1/2 ‖ P^{1/2} (u - y) ‖²
@@ -267,7 +268,7 @@ curvfp = u -> precon # curvature of fp(u)
 
 xlsp, out2 = ncg([A], [gradfp], [curvfp], x0; niter, fun)
 plot!(ppr, 0:niter, out2,
- label = "DCF preconditioned, 0 init", color = :blue, marker = :x,
+ label = "WLS-CG with DCF weighting, 0 init", color = :red, marker = :x,
 )
 #src savefig(ppr, "precon0.pdf")
 
@@ -275,7 +276,7 @@ plot!(ppr, 0:niter, out2,
 x0 = gridded4 # initial guess: decent gridding reconstruction
 xls1, out1 = ncg([A], [gradf], [curvf], x0; niter, fun)
 plot!(ppr, 0:niter, out1,
-  label = "Non-preconditioned, gridding init", color=:green, marker=:+,
+  label = "LS-CG, gridding init", color=:blue, marker=:+,
 )
 
 #src savefig(ppr, "precon1.pdf")
