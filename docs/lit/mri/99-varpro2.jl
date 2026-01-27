@@ -203,7 +203,7 @@ ph = histogram((real(tmp) .- real(y_true[end])) / (σ/√2), bins=-4:0.1:4,
 #src Ts = Tf
 #src roundr(rate) = round(Ts, Float64(Ts(rate)), digits=2)
 roundr(rate) = round(rate, digits=2)
-#todo xaxis_td = ("Δt", (0,195).*ms, [0ms; tm_diff; M*Δte])
+#src todo xaxis_td = ("Δt", (0,195).*ms, [0ms; tm_diff; M*Δte])
 
 
 #=
@@ -328,7 +328,7 @@ plot!(annotation = (24, 200, "CRB = $(roundr(crb_std.rb))", :red))
 
 #src gui(); throw(); # xx
 
-# todo: NLLS
+#src todo: NLLS
 
 #=
 ## Future work
