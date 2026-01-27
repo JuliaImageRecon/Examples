@@ -1,7 +1,8 @@
 #=
 # [VarPro: Two exponentials](@id varpro2)
 
-Illustrate fitting bi-exponential model to data.
+Illustrate fitting bi-exponential model to data,
+using `NamedTuple` types to organize parameters.
 
 See:
 - [VarPro blog](https://geo-ant.github.io/blog/2020/variable-projection-part-1-fundamentals)
@@ -80,12 +81,12 @@ having a mix of linear and nonlinear signal parameters.
 Here there is just one scan parameter (echo time).
 
 - These functions would need to be generalized
-to handle multiple scan parameters
-(e.g., echo time, phase cycling factor, flip angle).
+  to handle multiple scan parameters
+  (e.g., echo time, phase cycling factor, flip angle).
 
 - They would also need to be generalized
-to handle models with "known" parameters
-(e.g., B0 and B1+).
+  to handle models with "known" parameters
+  (e.g., B0 and B1+).
 =#
 signal_bases(non::Tnon, t::Number) =
     signal_bases(non..., t)
@@ -97,17 +98,16 @@ signal(lin::Tlin, non::Tnon, tv::AbstractVector) =
 
 # Signal model helpers:
 signal(lin::AbstractVector, non::Tnon, tv::AbstractVector) =
-   signal(Tlin(lin), non, tv)
+    signal(Tlin(lin), non, tv)
 signal(lin, non::AbstractVector, tv::AbstractVector) =
-   signal(lin, Tnon(non), tv)
+    signal(lin, Tnon(non), tv)
 function signal(x::Tall, tv::AbstractVector)
-   fun = name -> getfield(x, name)
-#src @show fun.(Lin) fun.(Non)
-   signal(Tlin(fun.(Lin)), Tnon(fun.(Non)), tv)
+    fun = name -> getfield(x, name)
+    signal(Tlin(fun.(Lin)), Tnon(fun.(Non)), tv)
 #src signal(collect(x), tv) # simpler, but riskier?
 end
 signal(x::AbstractVector, tv::AbstractVector) =
-   signal(Tall(x), tv)
+    signal(Tall(x), tv);
 #src signal(x[1:length(Lin)], x[length(Lin)+1:end], tv) # ugly
 
 # ## Simulate data:
@@ -139,7 +139,7 @@ pp = scatter(tm/ms, angle.(y_true_phased), label = "True data",
  xaxis = xaxis_t,
  yaxis = ("Phase", (-π, π), ((-1:1)*π, ["-π", "0", "π"])),
 )
-scatter!(tm, angle.(yc), label="Noisy data")
+scatter!(tm/ms, angle.(yc), label="Noisy data")
 
 
 #
@@ -276,6 +276,10 @@ the cost function simplifies to
 ``-‖Q'y‖₂``,
 which is a natural extension of the dot product
 used in dictionary matching.
+
+For models with more than 2-3 nonlinear parameters,
+some form of dictionary compression
+would help reduce memory.
 =#
 ra_list = Tf.(range(50/s, 160/s, 221)) # linear spacing?
 rb_list = Tf.(range(0/s, 40/s, 81)) # linear spacing?
@@ -289,7 +293,7 @@ tmp = stack(last ∘ eachcol, dict[1,:])
 pd2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 pd12 = plot(pd1, pd2, plot_title = "Dictionary")
 
-#
+# Orthogonalize dictionary using QR
 dict_q = map(A -> Matrix(qr(A).Q), dict)
 dict_q = map(A -> sign(A[1]) * A, dict_q); # preserve sign of 1st basis
 
@@ -300,14 +304,15 @@ tmp = stack(last ∘ eachcol, dict_q[1,:])
 pq2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 pq12 = plot(pq1, pq2, plot_title = "Orthogonalized Dictionary")
 
-#
+# Perform dictionary matching via VarPro
 varpro_cost(Q::Matrix, y::AbstractVector) = -norm(Q'*y)
 varpro_best(y) = findmin(Q -> varpro_cost(Q, y), dict_q)[2]
 
-if !@isdefined(i_vp) # perform dictionary matching via VarPro
-    i_vp = map(varpro_best, eachcol(ysim));
-end
-ra_dm = map(i -> ra_list[i[1]], i_vp) # dictionary matching estimates
+if !@isdefined(i_vp)
+    i_vp = map(varpro_best, eachcol(ysim))
+end;
+# Dictionary matching estimates (todo: how to make them NamedTuple?)
+ra_dm = map(i -> ra_list[i[1]], i_vp)
 rb_dm = map(i -> rb_list[i[2]], i_vp)
 
 ph_ra_dm = histogram(ra_dm, bins=60:5:160,
@@ -330,6 +335,7 @@ plot!(annotation = (24, 200, "CRB = $(roundr(crb_std.rb))", :red))
 #=
 ## Future work
 
+- Look at statistics of the (complex) amplitudes
 - Compare to ML via VarPro
 - Compare to ML via NLLS
 - Cost contours, before and after eliminating x
@@ -337,6 +343,7 @@ plot!(annotation = (24, 200, "CRB = $(roundr(crb_std.rb))", :red))
 - GD?
 - Newton's method?
 - Units?
+- Complex signals with real amplitudes?
 =#
 
 include("../../inc/reproduce.jl")
