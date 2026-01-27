@@ -442,14 +442,6 @@ plot(p2r,
 ## Future work
 
 - affine fit via LS and WLS and ML
-
-Biexponential case:
-- Compare to ML via VarPro
-- Compare to ML via NLS
-- Cost contours, before and after eliminating x
-- MM approach?
-- GD?
-- Newton's method?
 =#
 
 include("../../inc/reproduce.jl")
