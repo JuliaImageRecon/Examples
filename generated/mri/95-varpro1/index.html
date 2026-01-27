@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Variable Projection: One exponential · Examples</title><meta name="title" content="Variable Projection: One exponential · Examples"/><meta property="og:title" content="Variable Projection: One exponential · Examples"/><meta property="twitter:title" content="Variable Projection: One exponential · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/95-varpro1/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/95-varpro1/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/95-varpro1/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li><a class="tocitem" href="../3-2d-t/">2D dynamic: temporal TV</a></li><li><a class="tocitem" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI </a></li><li><a class="tocitem" href="../5-l-plus-s/">L+S 2D dynamic recon</a></li><li><a class="tocitem" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI</a></li><li class="is-active"><a class="tocitem" href>Variable Projection: One exponential</a><ul class="internal"><li><a class="tocitem" href="#Single-exponential"><span>Single exponential</span></a></li><li><a class="tocitem" href="#Random-phase-and-noise"><span>Random phase and noise</span></a></li><li><a class="tocitem" href="#Phase-correction"><span>Phase correction</span></a></li><li><a class="tocitem" href="#Log-linear-fit"><span>Log-linear fit</span></a></li><li><a class="tocitem" href="#CRB"><span>CRB</span></a></li><li><a class="tocitem" href="#Log-linear-fit-to-early-echoes"><span>Log-linear fit to early echoes</span></a></li><li><a class="tocitem" href="#Compare-to-dictionary-matching"><span>Compare to dictionary matching</span></a></li><li><a class="tocitem" href="#WLS-for-log-linear-fit"><span>WLS for log-linear fit</span></a></li><li><a class="tocitem" href="#Phantom-illustration"><span>Phantom illustration</span></a></li><li><a class="tocitem" href="#Future-work"><span>Future work</span></a></li></ul></li><li><a class="tocitem" href="../99-varpro2/">VarPro: Two exponentials</a></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>Variable Projection: One exponential</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Variable Projection: One exponential</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/95-varpro1.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="varpro1"><a class="docs-heading-anchor" href="#varpro1">Variable Projection: One exponential</a><a id="varpro1-1"></a><a class="docs-heading-anchor-permalink" href="#varpro1" title="Permalink"></a></h1><p>Illustrate fitting one exponential to data.</p><p>See:</p><ul><li><a href="https://geo-ant.github.io/blog/2020/variable-projection-part-1-fundamentals">VarPro blog</a></li><li><a href="https://github.com/cganter/VP4Optim.jl">VP4Optim.jl</a> has biexponential fits</li><li><a href="https://github.com/macd/Varpro.jl">Varpro.jl</a></li></ul><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/95-varpro1.jl"><code>95-varpro1.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/95-varpro1.ipynb"><code>95-varpro1.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/95-varpro1.ipynb"><code>95-varpro1.ipynb</code></a>.</p><h3 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h3><p>Packages needed here.</p><pre><code class="language-julia hljs">using ImagePhantoms: ellipse, ellipse_parameters, phantom, SheppLoganBrainWeb
+using Statistics: mean, std
+using Plots: default, gui, histogram, plot, plot!, scatter, scatter!
+using Plots: cgrad, RGB
+default(markerstrokecolor=:auto, label=&quot;&quot;, widen = true)
+using LaTeXStrings
+using LinearAlgebra: norm, Diagonal, diag, diagm
+using MIRTjim: jim
+using Random: seed!; seed!(0)
+using Unitful: @u_str, uconvert, ustrip, ms, s, mm
+using InteractiveUtils: versioninfo</code></pre><h2 id="Single-exponential"><a class="docs-heading-anchor" href="#Single-exponential">Single exponential</a><a id="Single-exponential-1"></a><a class="docs-heading-anchor-permalink" href="#Single-exponential" title="Permalink"></a></h2><p>We explore a simple case: fitting a single exponential to some noisy data: <span>$y_m = x e^{- r t_m} + ϵ_m$</span> for <span>$m = 1,…,M$</span>. The two unknown parameters here are:</p><ul><li>the decay rate <span>$r ≥ 0$</span></li><li>the amplitude <span>$x$</span> (that could be complex in some MRI settings)</li></ul><pre><code class="language-julia hljs">Tf = Float32
+Tc = Complex{Tf}
+M = 8 # how many samples
+Δte = 25ms # echo spacing
+te1 = 5ms # time of first echo
+tm = Tf.(te1 .+ (0:(M-1)) * Δte) # echo times
+x_true = 100 # AU
+r_true = 20/s
+signal(x, r; t=tm) = x * exp.(-t * r) # signal model
+y_true = signal(x_true, r_true)
+tf = range(0, M, 201) * Δte
+xaxis_t = (&quot;t&quot;, (0,200).*ms, [0ms; tm; M*Δte])
+py = plot( xaxis = xaxis_t )
+plot!(py, tf, signal(x_true, r_true; t=tf), color=:black)
+scatter!(py, tm, y_true, label = &quot;Noiseless data, M=$M samples&quot;)</code></pre><img src="11d234c3.svg" alt="Example block output"/><h2 id="Random-phase-and-noise"><a class="docs-heading-anchor" href="#Random-phase-and-noise">Random phase and noise</a><a id="Random-phase-and-noise-1"></a><a class="docs-heading-anchor-permalink" href="#Random-phase-and-noise" title="Permalink"></a></h2><p>Actual MRI data has some phase and noise.</p><pre><code class="language-julia hljs">phase_true = rand() * 2π + 0π
+y_true_phased = Tc.(cis(phase_true) * y_true)
+
+snr = 25 # dB
+snr2sigma(db, y) = 10^(-db/20) * norm(y) / sqrt(length(y))
+σ = Tf(snr2sigma(snr, y_true_phased))
+yc = y_true_phased + σ * randn(Tc, M)
+@show 20 * log10(norm(yc) / norm(yc - y_true_phased)) # check σ
+
+pp = scatter(tm, angle.(y_true_phased), label = &quot;True data&quot;,
+ xaxis = xaxis_t,
+ yaxis = (&quot;Phase&quot;, (-π, π), ((-1:1)*π, [&quot;-π&quot;, &quot;0&quot;, &quot;π&quot;])),
+)
+scatter!(tm, angle.(yc), label=&quot;Noisy data&quot;)</code></pre><img src="507b2c42.svg" alt="Example block output"/><p>The phase of the noisy data becomes unreliable for low signal values</p><pre><code class="language-julia hljs">pc = scatter(tm, real(yc),
+ label = &quot;Noisy data - real part&quot;,
+ xaxis = xaxis_t,
+ ylim = (-100, 100),
+)
+scatter!(pc, tm, imag(yc),
+ label = &quot;Noisy data - imag part&quot;,
+)</code></pre><img src="9da61df5.svg" alt="Example block output"/><h2 id="Phase-correction"><a class="docs-heading-anchor" href="#Phase-correction">Phase correction</a><a id="Phase-correction-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-correction" title="Permalink"></a></h2><p>Phase correct signal using phase of first (noisy) data point</p><pre><code class="language-julia hljs">yr = conj(sign(yc[1])) .* yc
+
+pr = deepcopy(py)
+scatter!(pr, tm, real(yr),
+ label = &quot;Phase corrected data - real part&quot;,
+ xaxis = xaxis_t,
+ ylim = (-5, 105),
+ marker = :square,
+)
+scatter!(pr, tm, imag(yr),
+ label = &quot;Phase corrected data - imag part&quot;,
+)</code></pre><img src="68855fa9.svg" alt="Example block output"/><p>Examine the distribution of real part after phase correction</p><pre><code class="language-julia hljs">function make1_phase_corrected_signal()
+    phase_true = rand() * 2π
+    y_true_phased = Tc.(cis(phase_true) * y_true)
+    yc = y_true_phased + σ * randn(Tc, M)
+    yr = conj(sign(yc[1])) .* yc
+end
+
+N = 2000
+ysim = stack(_ -&gt; make1_phase_corrected_signal(), 1:N)
+tmp = ysim[end,:]
+
+pe = scatter(real(tmp), imag(tmp), aspect_ratio=1,
+ xaxis = (&quot;real(y_$M)&quot;, (-4,8), -3:8),
+ yaxis = (&quot;imag(y_$M)&quot;, (-6,6), -5:5),
+)
+plot!(pe, real(y_true[end]) * [1,1], [-5, 5])
+plot!(pe, [-5, 5] .+ 3, imag(y_true[end]) * [1,1])</code></pre><img src="8dbd342b.svg" alt="Example block output"/><p>Histogram of the real part looks reasonably Gaussian</p><pre><code class="language-julia hljs">ph = histogram((real(tmp) .- real(y_true[end])) / (σ/√2), bins=-4:0.1:4,
+ xlabel = &quot;Real part of phase-corrected signal y_$M&quot;)</code></pre><img src="3629d673.svg" alt="Example block output"/><h2 id="Log-linear-fit"><a class="docs-heading-anchor" href="#Log-linear-fit">Log-linear fit</a><a id="Log-linear-fit-1"></a><a class="docs-heading-anchor-permalink" href="#Log-linear-fit" title="Permalink"></a></h2><p>LS fitting using log of absolute value of real part of phase-corrected data.</p><pre><code class="language-julia hljs">yl = @. log(abs(yr))
+pl = plot(xaxis=xaxis_t, yaxis=(&quot;Log data&quot;))
+log_fine = log.(signal(x_true, r_true; t=tf))
+plot!(pl, tf, log_fine, color=:lightgray)
+scatter!(pl, tm, log.(y_true), label=&quot;True&quot;, color=:black)
+scatter!(pl, tm, yl, label=&quot;Noisy&quot;, color=:red)</code></pre><img src="3191b799.svg" alt="Example block output"/><p>Linear (not affine!) fit, after normalizing data by 1st data point (which is a bit smaller than <code>x_true</code> since first sample is not at <span>$t=0$</span>).</p><pre><code class="language-julia hljs">tm_diff = tm .- te1 # time shift by 1st echo
+A1 = reshape(-tm_diff, M, 1)
+yl0 = yl .- yl[1] # normalize
+A1pinv = inv(A1&#39;*A1) * A1&#39;
+r1 = A1pinv * yl0
+r1 = only(r1)
+
+Ts = u&quot;s^-1&quot;
+xaxis_td = (&quot;Δt&quot;, (0,195).*ms, [0ms; tm_diff; M*Δte])
+pf1 = plot(xaxis=xaxis_td, yaxis=(&quot;Log data&quot;))
+plot!(pf1, tf .- te1, log_fine .- log(y_true[1]), color=:lightgray)
+scatter!(pf1, tm_diff, log.(y_true/y_true[1]),
+ label=&quot;True for R1=$r_true&quot;, color=:black)
+scatter!(pf1, tm_diff, yl0, label = &quot;Noisy&quot;, color=:red)
+roundr(rate) = round(Ts, Float64(Ts(rate)), digits=2)
+plot!(pf1, tf .- te1, -r1 .* (tf .- te1),
+ label = &quot;Linear Fit: R1 = $(roundr(r1))&quot;)</code></pre><img src="6651dd9c.svg" alt="Example block output"/><p>Maybe that poor fit was just one unlucky trial? Repeat the log-linear fit many times.</p><pre><code class="language-julia hljs">ysim_log = log.(abs.(ysim))
+ysim_log .-= ysim_log[1,:]&#39;
+r1sim = vec(A1pinv * ysim_log)
+r1sim = Ts.(r1sim)
+
+ph1 = histogram(r1sim, bins=16:0.2:32,
+ label = &quot;Mean=$(roundr(mean(r1sim))), σ=$(roundr(std(r1sim)))&quot;,
+ xaxis = (&quot;R1 estimate via log-linear fit&quot;, (16, 32)./s, (16:2:32)./s),
+)
+plot!(r_true*[1,1], [0, 140])</code></pre><img src="8b477efe.svg" alt="Example block output"/><h2 id="CRB"><a class="docs-heading-anchor" href="#CRB">CRB</a><a id="CRB-1"></a><a class="docs-heading-anchor-permalink" href="#CRB" title="Permalink"></a></h2><p>Compute CRB for precision of unbiased estimator. This requires inverting the Fisher information matrix. Here the Fisher information matrix has units, so Julia&#39;s built-in inverse <code>inv</code> does not work. See 2.4.5.2 of Fessler 2024 book for tips.</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+Matrix inverse for matrix whose units are suitable for inversion,
+meaning `X = Diag(left) * Z * Diag(right)`
+where `Z` is unitless and `left` and `right` are vectors with units.
+(Fisher information matrices always have this structure.)
+&quot;&quot;&quot;
+function inv_unitful(X::Matrix{&lt;:Number})
+    right = oneunit.(X[1,:]) # units for &quot;right side&quot; of matrix
+    left = oneunit.(X[:,1] / right[1]) # units for &quot;left side&quot; of matrix
+    N = size(X,1)
+    Z = [X[i,j] / (left[i] * right[j]) for i in 1:N, j in 1:N]
+    Zinv = inv(Z) # Z should be unitless if X has inverse-appropriate units
+    Xinv = [Zinv[i,j] / (right[i] * left[j]) for i in 1:N, j in 1:N]
+    return Xinv
+end;</code></pre><p>Gradients of <code>y_true = x_true * exp.(- r_true * tm)</code></p><pre><code class="language-julia hljs">grad1 = @. exp(-r_true * tm) # x
+grad2 = @. -x_true * tm * exp(-r_true * tm) # r
+grad = [grad1 grad2]
+fish1 = grad&#39; * grad / σ^2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 Matrix{Number}:
+    0.252982  -492.868 ms
+ -492.868 ms     2.38196f6 ms^2</code></pre><p>Compute CRB from Fisher information via unitful matrix inverse</p><pre><code class="language-julia hljs">crb = inv_unitful(fish1)
+crb_r1 = Ts(sqrt(crb[2,2]))
+crb_r1_xknown = Ts(sqrt(1/fish1[2,2]))
+
+plot!(annotation = (27, 100,
+ &quot;CRB = $(roundr(crb_r1)) or $(roundr(crb_r1_xknown))&quot;, :red))</code></pre><img src="7fa56aa7.svg" alt="Example block output"/><h2 id="Log-linear-fit-to-early-echoes"><a class="docs-heading-anchor" href="#Log-linear-fit-to-early-echoes">Log-linear fit to early echoes</a><a id="Log-linear-fit-to-early-echoes-1"></a><a class="docs-heading-anchor-permalink" href="#Log-linear-fit-to-early-echoes" title="Permalink"></a></h2><p>Try discarding some of the later echoes that have worse SNR. The results depend a lot on how many echoes are used. In this case, K = 4 or 5 works well, but how would you know in practice?</p><pre><code class="language-julia hljs">K = 3 # keep first few echos
+A1K = A1[1:K,:]
+A1pinvK = inv(A1K&#39;*A1K) * A1K&#39;
+r1simK = vec(A1pinvK * ysim_log[1:K,:])
+r1simK = Ts.(r1simK)
+
+phK = histogram(r1simK, bins=16:0.2:32,
+ label = &quot;Mean=$(roundr(mean(r1simK))), σ=$(roundr(std(r1simK)))&quot;,
+ xaxis = (&quot;R1 estimate via log-linear fit K=$K&quot;, (16, 32)./s, (16:2:32)./s),
+)
+plot!(r_true*[1,1], [0, 140])
+plot!(annotation = (27, 100,
+ &quot;CRB = $(roundr(crb_r1)) or $(roundr(crb_r1_xknown))&quot;, :red))</code></pre><img src="e2298e77.svg" alt="Example block output"/><h2 id="Compare-to-dictionary-matching"><a class="docs-heading-anchor" href="#Compare-to-dictionary-matching">Compare to dictionary matching</a><a id="Compare-to-dictionary-matching-1"></a><a class="docs-heading-anchor-permalink" href="#Compare-to-dictionary-matching" title="Permalink"></a></h2><p>This approach is essentially a quantized maximum-likelihood estimator. Here the quantization interval of 0.1/s turns out to be much smaller than the estimator standard deviation of 0.6/s, so the quantization error seems negligible.</p><p>It is essential to normalize the dictionary atoms by the Euclidean norm. The reason why is exactly the same as the <a href="https://doi.org/10.1088/0266-5611/19/2/201">VarPro</a> derivation.</p><pre><code class="language-julia hljs">r_list = range(0/s, 40/s, 401) # linear spacing?
+dict = signal(1, r_list&#39;)
+dict_norm = dict ./ norm.(eachcol(dict))&#39;
+pd = plot(
+  plot(tm, dict[:,1:10:end], title=&quot;Dictionary&quot;),
+  plot(tm, dict_norm[:,1:10:end], title=&quot;Normalized Dictionary&quot;),
+)</code></pre><img src="d63f21cb.svg" alt="Example block output"/><p>Inner products with (normalized) dictionary atoms</p><pre><code class="language-julia hljs">tmp = dict_norm&#39; * real(ysim)
+tmp = argmax.(eachcol(tmp)) # find max
+r_dm = r_list[tmp]; # R2 value from dictionary
+
+ph_dm = histogram(r_dm, bins=16:0.2:32,
+ label = &quot;Mean=$(roundr(mean(r_dm))), σ=$(roundr(std(r_dm)))&quot;,
+ xaxis = (&quot;R1 estimate via dictionary matching&quot;, (16, 32)./s, (16:2:32)./s),
+)
+plot!(r_true*[1,1], [0, 140])
+plot!(annotation = (27, 100,
+ &quot;CRB = $(roundr(crb_r1)) or $(roundr(crb_r1_xknown))&quot;, :red))</code></pre><img src="745ec192.svg" alt="Example block output"/><h2 id="WLS-for-log-linear-fit"><a class="docs-heading-anchor" href="#WLS-for-log-linear-fit">WLS for log-linear fit</a><a id="WLS-for-log-linear-fit-1"></a><a class="docs-heading-anchor-permalink" href="#WLS-for-log-linear-fit" title="Permalink"></a></h2><p>Compare to WLS via error propagation Much faster than dictionary matching!</p><p>Derive weights. The log of the normalized signal value (ignoring phase correction and the absolute value) is approximately (using a 1st-order Taylor expansion)</p><p class="math-container">\[v_m
+= \log(y_m / y_1)
+= \log(y_m) - \log(y_1)
+≈ \log(\bar{y}_m) - \log(\bar{y}_1)
++ (1/\bar{y}_m) (y_m - \bar{y}_m)
+- (1/\bar{y}_1) (y_1 - \bar{y}_1)\]</p><p>so the variance of that log value is</p><p class="math-container">\[\mathrm{Var}(v_m)
+≈ (1/\bar{y}_m^2) \, \mathrm{Var}(y_m - \bar{y}_m)
++ (1/\bar{y}_1^2) \, \mathrm{Var}(y_1 - \bar{y}_1)
+= σ^2 \, ( 1/\bar{y}_m^2 + 1/\bar{y}_1^2 ) .\]</p><p>We would like to perform the WLS fit using the reciprocal of that variance. However, the expected values <span>$\bar{y}_m = \mathbb{E}(y_m)$</span> are unknown because they depend on the latent parameter(s).</p><p>In practice we use a &quot;plug-in&quot; estimate using the observed data in place of the expectation:</p><p class="math-container">\[w_m = 1 / ( 1/y_m^2 + 1/y_1^2 ) .\]</p><p>The noise variance <span>$σ^2$</span> is the same for all <span>$m$</span> so it is irrelevant to the WLS fit:</p><p class="math-container">\[\arg\min_{x} (A x - b)&#39; W (A x - b)\]</p><p>where here <span>$b$</span> is the log normalized data <span>$b_m = \log(y_m / y_1)$</span> and <span>$x$</span> here denotes the rate parameter <span>$r$</span>.</p><p>For <span>$m=1$</span> we have <span>$v_1 = 1$</span> by construction, which has zero variance. Our log-linear model <span>$-r Δt$</span> is explicitly <span>$0$</span> at <span>$Δt_1 = 0$</span>, i.e., <span>$A_{1,1} = 0$</span>, so that first (normalized) data point provides no information and is inherently excluded from the linear fit (for any weighting).</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+   wls_exp_fit(y)
+Fit rate of a single exponential using weighted least-squares (WLS)
+Expects non-log data.
+Uses global `A1`.
+Returns scalar rate estimate.
+&quot;&quot;&quot;
+function wls_exp_fit(y)
+    w = @. (1 / y^2 + 1 / y[1]^2) # drop irrelevant σ^2
+    w = 1 ./ w # weights via 1st-order Taylor approx
+    A1w = w .* A1
+    ylog = @. log(abs(y ./ y[1]))
+    return only(A1w&#39; * ylog) / only(A1w&#39; * A1)
+end
+
+r1_wls = Ts.(wls_exp_fit.(real(eachcol(ysim))))
+
+ph_wls = histogram(r1_wls, bins=16:0.2:32,
+ label = &quot;Mean=$(roundr(mean(r1_wls))), σ=$(roundr(std(r1_wls)))&quot;,
+ xaxis = (&quot;R1 estimate via log-WLS&quot;, (16, 32)./s, (16:2:32)./s),
+)
+plot!(r_true*[1,1], [0, 270])
+plot!(annotation = (27, 100,
+ &quot;CRB = $(roundr(crb_r1)) or $(roundr(crb_r1_xknown))&quot;, :red))</code></pre><img src="1b3b5a06.svg" alt="Example block output"/><h2 id="Phantom-illustration"><a class="docs-heading-anchor" href="#Phantom-illustration">Phantom illustration</a><a id="Phantom-illustration-1"></a><a class="docs-heading-anchor-permalink" href="#Phantom-illustration" title="Permalink"></a></h2><pre><code class="language-julia hljs">r2_values = [20, 0, -3, -4, 5, 6, 7, 8, 9, -2] / s
+fovs = (256mm, 256mm)
+params = ellipse_parameters(SheppLoganBrainWeb(); fovs, disjoint=true)
+params = [(p[1:5]..., r2_values[i]) for (i, p) in enumerate(params)]
+ob = ellipse(params)
+y = range(-fovs[2]/2, fovs[2]/2, 256)
+x = range(-205/2, 205/2, 206) * (y[2]-y[1])
+oversample = 3
+r2_map_true = phantom(x, y, ob[1:1], 1) + # trick to avoid edge issues
+    phantom(x, y, ob[3:end], oversample)
+mask = r2_map_true .&gt; 0/s
+x_map_true = @. 100 * mask * cis(π/2 + x / 100mm) # non-uniform phase
+
+climr = (0,30) ./ s
+p2r = jim(x, y, r2_map_true, &quot;R2* Map&quot;;
+ clim = climr, xlabel=&quot;x&quot;, ylabel=&quot;y&quot;, color=:cividis)
+p2 = plot(
+ p2r,
+ jim(x, y, x_map_true, &quot;|M0 Map|&quot;; xlabel=&quot;x&quot;, ylabel=&quot;y&quot;),
+ jim(x, y, angle.(x_map_true), &quot;∠M0 Map&quot;; xlabel=&quot;x&quot;, ylabel=&quot;y&quot;, color=:hsv);
+ layout = (1,3), size=(800,300),
+)</code></pre><img src="1182c0c5.svg" alt="Example block output"/><p>Simulate multi-echo data</p><pre><code class="language-julia hljs">y_true_phantom = signal.(x_map_true, r2_map_true)
+y_true_phantom = stack(y_true_phantom)
+y_true_phantom = permutedims(y_true_phantom, [2, 3, 1]) # (nx,ny,M)
+dim = size(y_true_phantom)
+y_phantom = y_true_phantom + σ * randn(Tc, dim...)
+
+pyp = plot(
+ jim(x, y, y_phantom; title=&quot;|Echo images|&quot;),
+ jim(x, y, angle.(y_phantom); title=&quot;∠Echo images&quot;, color=:hsv),
+ layout = (1,2), size=(800,300),
+)</code></pre><img src="096eea30.svg" alt="Example block output"/><p>Phase correct</p><pre><code class="language-julia hljs">y_phantom_dephased = @. conj(sign(y_phantom[:,:,1])) * y_phantom
+jim(x, y, angle.(y_phantom_dephased); title=&quot;∠Echo images after dephasing&quot;, color=:hsv)</code></pre><img src="0038085f.svg" alt="Example block output"/><p>Take real part</p><pre><code class="language-julia hljs">y_phantom_realed = real(y_phantom_dephased)
+jim(x, y, y_phantom_realed; title=&quot;Real(Echo images) after dephasing&quot;)</code></pre><img src="2e789005.svg" alt="Example block output"/><p>WLS estimate of R2* from real part</p><pre><code class="language-julia hljs">r2_map_wls = Ts.(wls_exp_fit.(eachslice(y_phantom_realed; dims=(1,2))))
+r2_map_wls .*= mask
+RGB255(args...) = RGB((args ./ 255)...)
+ecolor = cgrad([RGB255(230, 80, 65), :black, RGB255(23, 120, 232)])
+rmse = sqrt(mean(abs2.(r2_map_wls[mask] - r2_map_true[mask])))
+plot(p2r,
+ jim(x, y, r2_map_wls, &quot;R2* Map via WLS&quot;;
+  clim = climr, xlabel=&quot;x&quot;, ylabel=&quot;y&quot;, color=:cividis),
+ jim(x, y, r2_map_wls - r2_map_true, &quot;R2* Error \n RMSE=$(roundr(rmse))&quot;;
+  clim = (-3, 3) ./ s, color=ecolor);
+ layout = (1,3), size=(800,300),
+)</code></pre><img src="817c8d40.svg" alt="Example block output"/><h2 id="Future-work"><a class="docs-heading-anchor" href="#Future-work">Future work</a><a id="Future-work-1"></a><a class="docs-heading-anchor-permalink" href="#Future-work" title="Permalink"></a></h2><ul><li>affine fit via LS and WLS and ML</li></ul><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../6-precon/">« DCF-based &quot;preconditioning&quot; in MRI</a><a class="docs-footer-nextpage" href="../99-varpro2/">VarPro: Two exponentials »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:01">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

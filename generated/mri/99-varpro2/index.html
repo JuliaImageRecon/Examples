@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>VarPro: Two exponentials · Examples</title><meta name="title" content="VarPro: Two exponentials · Examples"/><meta property="og:title" content="VarPro: Two exponentials · Examples"/><meta property="twitter:title" content="VarPro: Two exponentials · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/99-varpro2/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/99-varpro2/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/99-varpro2/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li><a class="tocitem" href="../3-2d-t/">2D dynamic: temporal TV</a></li><li><a class="tocitem" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI </a></li><li><a class="tocitem" href="../5-l-plus-s/">L+S 2D dynamic recon</a></li><li><a class="tocitem" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI</a></li><li><a class="tocitem" href="../95-varpro1/">Variable Projection: One exponential</a></li><li class="is-active"><a class="tocitem" href>VarPro: Two exponentials</a><ul class="internal"><li><a class="tocitem" href="#Double-exponential-(bi-exponential)"><span>Double exponential (bi-exponential)</span></a></li><li><a class="tocitem" href="#Signal-model"><span>Signal model</span></a></li><li><a class="tocitem" href="#Simulate-data:"><span>Simulate data:</span></a></li><li><a class="tocitem" href="#Random-phase-and-noise"><span>Random phase and noise</span></a></li><li><a class="tocitem" href="#Phase-correction"><span>Phase correction</span></a></li><li><a class="tocitem" href="#CRB"><span>CRB</span></a></li><li><a class="tocitem" href="#Dictionary-matching"><span>Dictionary matching</span></a></li><li><a class="tocitem" href="#Future-work"><span>Future work</span></a></li></ul></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>VarPro: Two exponentials</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>VarPro: Two exponentials</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/99-varpro2.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="varpro2"><a class="docs-heading-anchor" href="#varpro2">VarPro: Two exponentials</a><a id="varpro2-1"></a><a class="docs-heading-anchor-permalink" href="#varpro2" title="Permalink"></a></h1><p>Illustrate fitting bi-exponential model to data.</p><p>See:</p><ul><li><a href="https://geo-ant.github.io/blog/2020/variable-projection-part-1-fundamentals">VarPro blog</a></li><li><a href="https://github.com/cganter/VP4Optim.jl">VP4Optim.jl</a> has biexponential fits</li><li><a href="https://github.com/macd/Varpro.jl">Varpro.jl</a></li></ul><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/99-varpro2.jl"><code>99-varpro2.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/99-varpro2.ipynb"><code>99-varpro2.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/99-varpro2.ipynb"><code>99-varpro2.ipynb</code></a>.</p><h3 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h3><p>Packages needed here.</p><pre><code class="language-julia hljs">import ForwardDiff
+using ImagePhantoms: ellipse, ellipse_parameters, phantom, SheppLoganBrainWeb
+using Statistics: mean, std
+using Plots: default, gui, histogram, plot, plot!, scatter, scatter!
+using Plots: cgrad, RGB
+default(markerstrokecolor=:auto, label=&quot;&quot;, widen = true)
+using LaTeXStrings
+using LinearAlgebra: norm, Diagonal, diag, diagm, qr
+using MIRTjim: jim
+using Random: seed!; seed!(0)
+#using Unitful: @u_str, ms, s, mm
+ms = 0.001; s = 1; mm = 1 # avoid Unitful due to ForwardDiff
+using InteractiveUtils: versioninfo</code></pre><h2 id="Double-exponential-(bi-exponential)"><a class="docs-heading-anchor" href="#Double-exponential-(bi-exponential)">Double exponential (bi-exponential)</a><a id="Double-exponential-(bi-exponential)-1"></a><a class="docs-heading-anchor-permalink" href="#Double-exponential-(bi-exponential)" title="Permalink"></a></h2><p>We explore a simple case: fitting a bi-exponential to some noisy data:</p><p class="math-container">\[y_m = c_a e^{- r_a t_m} + c_b e^{- r_b t_m} + ϵ_m
+,\quad
+m = 1,…,M.\]</p><p>The four unknown parameters here are:</p><ul><li>the decay rates <span>$r_a, r_b ≥ 0$</span></li><li>the amplitudes (aka coefficients) <span>$c_a, c_b$</span> (that could be complex in some MRI settings)</li></ul><pre><code class="language-julia hljs">Tf = Float32
+Tc = Complex{Tf}
+M = 18 # how many samples (more than in single exponential demo!)
+Δte = 10ms # echo spacing
+te1 = 5ms # time of first echo
+tm = Tf.(te1 .+ (0:(M-1)) * Δte) # echo times
+Lin = (:ca, :cb) # linear model parameter names
+Non = (:ra, :rb) # nonlinear model parameter names
+Tlin = NamedTuple{Lin}
+Tnon = NamedTuple{Non}
+Tall = NamedTuple{(Lin..., Non...)}
+c_true = Tlin(Tf.([60, 40])) # AU
+r_true = Tnon(Tf.([100/s, 20/s]))
+x_true = (; c_true..., r_true...) # all parameters</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(ca = 60.0f0, cb = 40.0f0, ra = 100.0f0, rb = 20.0f0)</code></pre><h2 id="Signal-model"><a class="docs-heading-anchor" href="#Signal-model">Signal model</a><a id="Signal-model-1"></a><a class="docs-heading-anchor-permalink" href="#Signal-model" title="Permalink"></a></h2><p>This next function is the signal basis function(s) from physics. This is the only function that is model-specific.</p><pre><code class="language-julia hljs">signal_bases(ra::Number, rb::Number, t::Number) =
+    [exp(-t * ra); exp(-t * rb)]; # bi-exponential model</code></pre><p>The following signal helper functions apply to many models having a mix of linear and nonlinear signal parameters.</p><p>Here there is just one scan parameter (echo time).</p><ul><li>These functions would need to be generalized</li></ul><p>to handle multiple scan parameters (e.g., echo time, phase cycling factor, flip angle).</p><ul><li>They would also need to be generalized</li></ul><p>to handle models with &quot;known&quot; parameters (e.g., B0 and B1+).</p><pre><code class="language-julia hljs">signal_bases(non::Tnon, t::Number) =
+    signal_bases(non..., t)
+signal_bases(non::Tnon, tv::AbstractVector) =
+    stack(t -&gt; signal_bases(non, t), tv; dims=1);</code></pre><p>Signal model that combines nonlinear and linear effects:</p><pre><code class="language-julia hljs">signal(lin::Tlin, non::Tnon, tv::AbstractVector) =
+    signal_bases(non, tv) * collect(lin);</code></pre><p>Signal model helpers:</p><pre><code class="language-julia hljs">signal(lin::AbstractVector, non::Tnon, tv::AbstractVector) =
+   signal(Tlin(lin), non, tv)
+signal(lin, non::AbstractVector, tv::AbstractVector) =
+   signal(lin, Tnon(non), tv)
+function signal(x::Tall, tv::AbstractVector)
+   fun = name -&gt; getfield(x, name)
+   signal(Tlin(fun.(Lin)), Tnon(fun.(Non)), tv)
+end
+signal(x::AbstractVector, tv::AbstractVector) =
+   signal(Tall(x), tv)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">signal (generic function with 5 methods)</code></pre><h2 id="Simulate-data:"><a class="docs-heading-anchor" href="#Simulate-data:">Simulate data:</a><a id="Simulate-data:-1"></a><a class="docs-heading-anchor-permalink" href="#Simulate-data:" title="Permalink"></a></h2><pre><code class="language-julia hljs">y_true = signal(c_true, r_true, tm)
+@assert y_true == signal(x_true, tm)
+tf = Tf.(range(0, M, 201) * Δte) # fine sampling for plots
+yf = signal(c_true, r_true, tf)
+xaxis_t = (&quot;t [ms]&quot;, (0,200), (0:4:M)*Δte/ms) # no units
+py = plot( xaxis = xaxis_t, yaxis = (&quot;y&quot;, (0,100)) )
+plot!(py, tf/ms, yf, color=:black)
+scatter!(py, tm/ms, y_true, label = &quot;Noiseless data, M=$M samples&quot;)</code></pre><img src="032af86e.svg" alt="Example block output"/><h2 id="Random-phase-and-noise"><a class="docs-heading-anchor" href="#Random-phase-and-noise">Random phase and noise</a><a id="Random-phase-and-noise-1"></a><a class="docs-heading-anchor-permalink" href="#Random-phase-and-noise" title="Permalink"></a></h2><p>Actual MRI data has some phase and noise.</p><pre><code class="language-julia hljs">phase_true = rand() * 2π + 0π
+y_true_phased = Tc.(cis(phase_true) * y_true)
+
+snr = 25 # dB
+snr2sigma(db, y) = 10^(-db/20) * norm(y) / sqrt(length(y))
+σ = Tf(snr2sigma(snr, y_true_phased))
+yc = y_true_phased + σ * randn(Tc, M)
+@show 20 * log10(norm(yc) / norm(yc - y_true_phased)) # check σ</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">26.45752f0</code></pre><p>The phase of the noisy data becomes unreliable for low signal values:</p><pre><code class="language-julia hljs">pp = scatter(tm/ms, angle.(y_true_phased), label = &quot;True data&quot;,
+ xaxis = xaxis_t,
+ yaxis = (&quot;Phase&quot;, (-π, π), ((-1:1)*π, [&quot;-π&quot;, &quot;0&quot;, &quot;π&quot;])),
+)
+scatter!(tm, angle.(yc), label=&quot;Noisy data&quot;)</code></pre><img src="50bd5e49.svg" alt="Example block output"/><pre><code class="language-julia hljs">pc = scatter(tm/ms, real(yc),
+ label = &quot;Noisy data - real part&quot;,
+ xaxis = xaxis_t,
+ ylim = (-100, 100),
+)
+scatter!(pc, tm/ms, imag(yc),
+ label = &quot;Noisy data - imag part&quot;,
+)</code></pre><img src="8e4ab90c.svg" alt="Example block output"/><h2 id="Phase-correction"><a class="docs-heading-anchor" href="#Phase-correction">Phase correction</a><a id="Phase-correction-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-correction" title="Permalink"></a></h2><p>Phase correct signal using phase of first (noisy) data point</p><pre><code class="language-julia hljs">yr = conj(sign(yc[1])) .* yc
+
+pr = deepcopy(py)
+scatter!(pr, tm/ms, real(yr),
+ label = &quot;Phase corrected data - real part&quot;,
+ xaxis = xaxis_t,
+ ylim = (-5, 105),
+ marker = :square,
+)
+scatter!(pr, tm/ms, imag(yr),
+ label = &quot;Phase corrected data - imag part&quot;,
+)</code></pre><img src="a4ee6c8e.svg" alt="Example block output"/><p>Examine the distribution of real part after phase correction</p><pre><code class="language-julia hljs">function make1_phase_corrected_signal()
+    phase_true = rand() * 2π
+    y_true_phased = Tc.(cis(phase_true) * y_true)
+    yc = y_true_phased + σ * randn(Tc, M)
+    yr = conj(sign(yc[1])) .* yc
+end
+
+N = 2000
+ysim = stack(_ -&gt; make1_phase_corrected_signal(), 1:N)
+tmp = ysim[end,:];
+
+pe = scatter(real(tmp), imag(tmp), aspect_ratio=1,
+ xaxis = (&quot;real(y_$M)&quot;, (-4,8), -3:8),
+ yaxis = (&quot;imag(y_$M)&quot;, (-6,6), -5:5),
+)
+plot!(pe, real(y_true[end]) * [1,1], [-5, 5])
+plot!(pe, [-5, 5] .+ 3, imag(y_true[end]) * [1,1])</code></pre><img src="600e1ef1.svg" alt="Example block output"/><p>Histogram of the real part looks reasonably Gaussian</p><pre><code class="language-julia hljs">ph = histogram((real(tmp) .- real(y_true[end])) / (σ/√2), bins=-4:0.1:4,
+ xlabel = &quot;Real part of phase-corrected signal y_$M&quot;)
+
+
+roundr(rate) = round(rate, digits=2);</code></pre><h2 id="CRB"><a class="docs-heading-anchor" href="#CRB">CRB</a><a id="CRB-1"></a><a class="docs-heading-anchor-permalink" href="#CRB" title="Permalink"></a></h2><p>Compute CRB for precision of unbiased estimator. This requires inverting the Fisher information matrix. If the Fisher information matrix has units, then Julia&#39;s built-in inverse <code>inv</code> does not work. See 2.4.5.2 of Fessler 2024 book for tips.</p><pre><code class="language-julia hljs">&quot;&quot;&quot;
+Matrix inverse for matrix whose units are suitable for inversion,
+meaning `X = Diag(left) * Z * Diag(right)`
+where `Z` is unitless and `left` and `right` are vectors with units.
+(Fisher information matrices always have this structure.)
+
+[irrelevant when units are excluded]
+&quot;&quot;&quot;
+function inv_unitful(X::Matrix{&lt;:Number})
+    right = oneunit.(X[1,:]) # units for &quot;right side&quot; of matrix
+    left = oneunit.(X[:,1] / right[1]) # units for &quot;left side&quot; of matrix
+    N = size(X,1)
+    Z = [X[i,j] / (left[i] * right[j]) for i in 1:N, j in 1:N]
+    Zinv = inv(Z) # Z should be unitless if X has inverse-appropriate units
+    Xinv = [Zinv[i,j] / (right[i] * left[j]) for i in 1:N, j in 1:N]
+    return Xinv
+end;
+
+
+signal(x) = signal(x, tm)
+@assert y_true == signal(collect(x_true))</code></pre><p>Jacobian of signal w.r.t. both linear and nonlinear parameters</p><pre><code class="language-julia hljs">jac = ForwardDiff.jacobian(signal, collect(x_true));</code></pre><p>Fisher information</p><pre><code class="language-julia hljs">fish = jac&#39; * jac / σ^2;</code></pre><p>Compute CRB from Fisher information via matrix inverse</p><pre><code class="language-julia hljs">crb = inv_unitful(fish)
+
+round3(x) = round(x; digits=3)
+crb_std = Tall(round3.(sqrt.(diag(crb)))) # relabel CRB std. deviations</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(ca = 5.03f0, cb = 6.177f0, ra = 19.046f0, rb = 2.103f0)</code></pre><h2 id="Dictionary-matching"><a class="docs-heading-anchor" href="#Dictionary-matching">Dictionary matching</a><a id="Dictionary-matching-1"></a><a class="docs-heading-anchor-permalink" href="#Dictionary-matching" title="Permalink"></a></h2><p>This approach is essentially a quantized maximum-likelihood estimator. Here the quantization interval of 0.5/s turns out to be much smaller than the estimator standard deviation, so the quantization error seems negligible.</p><p>Simple dot products seem inapplicable to a 2-pool model, so we use VarPro.</p><p>The <a href="https://doi.org/10.1088/0266-5611/19/2/201">VarPro</a> cost function (for complex coefficients) becomes</p><p class="math-container">\[f(r) = -(A&#39;y)&#39; (A&#39;A)^{-1} A&#39;y\]</p><p>where <span>$A = A(r)$</span> is a <span>$M × 2$</span> matrix for each <code>r</code>.</p><p>By applying the QR decomposition of <code>A</code>, the cost function simplifies to <span>$-‖Q&#39;y‖₂$</span>, which is a natural extension of the dot product used in dictionary matching.</p><pre><code class="language-julia hljs">ra_list = Tf.(range(50/s, 160/s, 221)) # linear spacing?
+rb_list = Tf.(range(0/s, 40/s, 81)) # linear spacing?
+bases_unnormalized(ra, rb) = signal_bases((;ra, rb), tm)
+dict = bases_unnormalized.(ra_list, rb_list&#39;);</code></pre><p>Plot the fast and slow dictionary components</p><pre><code class="language-julia hljs">tmp = stack(first ∘ eachcol, dict[:,1])
+pd1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
+tmp = stack(last ∘ eachcol, dict[1,:])
+pd2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
+pd12 = plot(pd1, pd2, plot_title = &quot;Dictionary&quot;)</code></pre><img src="f3cf698d.svg" alt="Example block output"/><pre><code class="language-julia hljs">dict_q = map(A -&gt; Matrix(qr(A).Q), dict)
+dict_q = map(A -&gt; sign(A[1]) * A, dict_q); # preserve sign of 1st basis</code></pre><pre><code class="language-julia hljs">tmp = stack(first ∘ eachcol, dict_q[:,1])
+pq1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
+tmp = stack(last ∘ eachcol, dict_q[1,:])
+pq2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
+pq12 = plot(pq1, pq2, plot_title = &quot;Orthogonalized Dictionary&quot;)</code></pre><img src="4595ad80.svg" alt="Example block output"/><pre><code class="language-julia hljs">varpro_cost(Q::Matrix, y::AbstractVector) = -norm(Q&#39;*y)
+varpro_best(y) = findmin(Q -&gt; varpro_cost(Q, y), dict_q)[2]
+
+if !@isdefined(i_vp) # perform dictionary matching via VarPro
+    i_vp = map(varpro_best, eachcol(ysim));
+end
+ra_dm = map(i -&gt; ra_list[i[1]], i_vp) # dictionary matching estimates
+rb_dm = map(i -&gt; rb_list[i[2]], i_vp)
+
+ph_ra_dm = histogram(ra_dm, bins=60:5:160,
+ label = &quot;Mean=$(roundr(mean(ra_dm))), σ=$(roundr(std(ra_dm)))&quot;,
+ xaxis = (&quot;Ra estimate via dictionary matching&quot;, (60, 160)./s),
+)
+plot!(r_true.ra*[1,1], [0, 3e2])
+plot!(annotation = (140, 200, &quot;CRB(Ra) = $(roundr(crb_std.ra))&quot;, :red))</code></pre><img src="8885eb88.svg" alt="Example block output"/><pre><code class="language-julia hljs">ph_rb_dm = histogram(rb_dm, bins=14:0.5:26,
+ label = &quot;Mean=$(roundr(mean(rb_dm))), σ=$(roundr(std(rb_dm)))&quot;,
+ xaxis = (&quot;Rb estimate via dictionary matching&quot;, (14, 26)./s),
+)
+plot!(r_true.rb*[1,1], [0, 3e2])
+plot!(annotation = (24, 200, &quot;CRB = $(roundr(crb_std.rb))&quot;, :red))</code></pre><img src="2cc67144.svg" alt="Example block output"/><h2 id="Future-work"><a class="docs-heading-anchor" href="#Future-work">Future work</a><a id="Future-work-1"></a><a class="docs-heading-anchor-permalink" href="#Future-work" title="Permalink"></a></h2><ul><li>Compare to ML via VarPro</li><li>Compare to ML via NLLS</li><li>Cost contours, before and after eliminating x</li><li>MM approach?</li><li>GD?</li><li>Newton&#39;s method?</li><li>Units?</li></ul><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../95-varpro1/">« Variable Projection: One exponential</a><a class="docs-footer-nextpage" href="../../ct/1-fbp/">FBP Overview »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:01">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Compressed Sensing 2D pMRI  · Examples</title><meta name="title" content="Compressed Sensing 2D pMRI  · Examples"/><meta property="og:title" content="Compressed Sensing 2D pMRI  · Examples"/><meta property="twitter:title" content="Compressed Sensing 2D pMRI  · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/4-cs-sense-2d/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/4-cs-sense-2d/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/4-cs-sense-2d/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li><a class="tocitem" href="../3-2d-t/">2D dynamic: temporal TV</a></li><li class="is-active"><a class="tocitem" href>Compressed Sensing 2D pMRI </a><ul class="internal"><li><a class="tocitem" href="#Create-(synthetic)-data"><span>Create (synthetic) data</span></a></li><li><a class="tocitem" href="#Prepare-to-reconstruct"><span>Prepare to reconstruct</span></a></li><li><a class="tocitem" href="#Wavelet-sparsity-in-synthesis-form"><span>Wavelet sparsity in synthesis form</span></a></li><li><a class="tocitem" href="#Iterate"><span>Iterate</span></a></li><li><a class="tocitem" href="#Convergence-rate:-POGM-is-fastest"><span>Convergence rate: POGM is fastest</span></a></li><li><a class="tocitem" href="#Discussion"><span>Discussion</span></a></li></ul></li><li><a class="tocitem" href="../5-l-plus-s/">L+S 2D dynamic recon</a></li><li><a class="tocitem" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI</a></li><li><a class="tocitem" href="../95-varpro1/">Variable Projection: One exponential</a></li><li><a class="tocitem" href="../99-varpro2/">VarPro: Two exponentials</a></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>Compressed Sensing 2D pMRI </a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Compressed Sensing 2D pMRI </a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/4-cs-sense-2d.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="4-cs-sense-2d"><a class="docs-heading-anchor" href="#4-cs-sense-2d">Compressed Sensing 2D pMRI </a><a id="4-cs-sense-2d-1"></a><a class="docs-heading-anchor-permalink" href="#4-cs-sense-2d" title="Permalink"></a></h1><p>This example illustrates how to perform 2D compressed sensing image reconstruction from Cartesian sampled MRI data for parallel MRI (sensitivity encoding) with 1-norm regularization of orthogonal wavelet coefficients, using the Julia language.</p><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/4-cs-sense-2d.jl"><code>4-cs-sense-2d.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/4-cs-sense-2d.ipynb"><code>4-cs-sense-2d.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/4-cs-sense-2d.ipynb"><code>4-cs-sense-2d.ipynb</code></a>.</p><p>This demo is somewhat similar to Fig. 3 in the survey paper &quot;<a href="https://doi.org/10.1109/MSP.2019.2943645">Optimization methods for MR image reconstruction</a>,&quot; in Jan 2020 IEEE Signal Processing Magazine, except</p><ul><li>the sampling is 1D phase encoding instead of 2D,</li><li>there are multiple coils,</li><li>we use units (WIP - todo)</li><li>the simulation avoids inverse crimes.</li></ul><p>Packages used in this demo (run <code>Pkg.add</code> as needed):</p><pre><code class="language-julia hljs">using ImagePhantoms: ellipse_parameters, SheppLoganBrainWeb, ellipse, phantom
+using ImagePhantoms: mri_smap_fit, mri_spectra
+#using ImageFiltering: imfilter, centered
+using ImageMorphology: dilate #, label_components # imfill
+using LazyGrids: ndgrid
+using ImageGeoms: embed, embed!
+using MIRT: Aodwt, Asense
+using MIRTjim: jim, prompt
+using MIRT: ir_mri_sensemap_sim
+using MIRT: pogm_restart
+using LinearAlgebra: norm, dot
+using LinearMapsAA: LinearMapAA
+using Plots; default(markerstrokecolor=:auto, label=&quot;&quot;)
+using FFTW: fft!, bfft!, fftshift!
+using Random: seed!
+using InteractiveUtils: versioninfo</code></pre><p>The following line is helpful when running this jl-file as a script; this way it will prompt user to hit a key after each image is displayed.</p><pre><code class="language-julia hljs">isinteractive() &amp;&amp; jim(:prompt, true);</code></pre><h2 id="Create-(synthetic)-data"><a class="docs-heading-anchor" href="#Create-(synthetic)-data">Create (synthetic) data</a><a id="Create-(synthetic)-data-1"></a><a class="docs-heading-anchor-permalink" href="#Create-(synthetic)-data" title="Permalink"></a></h2><p>Image geometry:</p><pre><code class="language-julia hljs">uu = 1
+fovs = (256, 256) .* uu
+nx, ny = (192, 256)
+dx, dy = fovs ./ (nx,ny)
+x = (-(nx÷2):(nx÷2-1)) * dx
+y = (-(ny÷2):(ny÷2-1)) * dy</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-128.0:1.0:127.0</code></pre><p>Modified Shepp-Logan phantom with random complex phases per ellipse</p><pre><code class="language-julia hljs">object = ellipse_parameters(SheppLoganBrainWeb() ; disjoint=true, fovs)
+seed!(0)
+object = vcat( (object[1][1:end-1]..., 1), # random phases
+    [(ob[1:end-1]..., randn(ComplexF32)) for ob in object[2:end]]...)
+object = ellipse(object)
+oversample = 3
+Xtrue = phantom(x, y, object, oversample)
+cfun = z -&gt; cat(dims = ndims(z)+1, real(z), imag(z))
+jim(:aspect_ratio, :equal)
+jim(x, y, cfun(Xtrue), &quot;True image\n real | imag&quot;; ncol=2)</code></pre><img src="401e0c04.svg" alt="Example block output"/><p>Mask (support for image reconstruction)</p><pre><code class="language-julia hljs">mask = abs.(Xtrue) .&gt; 0
+mask = dilate(dilate(dilate(mask))) # repeated dilate with 3×3 square
+@assert mask .* Xtrue == Xtrue
+jim(x, y, mask + abs.(Xtrue), &quot;Mask + |Xtrue|&quot;)</code></pre><img src="1f9844a6.svg" alt="Example block output"/><p>Make sensitivity maps, normalized so SSoS = 1:</p><pre><code class="language-julia hljs">ncoil = 4
+smap_raw = ir_mri_sensemap_sim(dims=(nx,ny); ncoil, orbit_start=[45])
+jif(args...; kwargs...) = jim(args...; prompt=false, kwargs...)
+p1 = jif(x, y, smap_raw, &quot;Sensitivity maps raw&quot;);
+
+sum_last = (f, x) -&gt; selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
+ssos_fun = smap -&gt; sqrt.(sum_last(abs2, smap)) # SSoS
+ssos_raw = ssos_fun(smap_raw) # SSoS raw
+p2 = jif(x, y, ssos_raw, &quot;SSoS raw, ncoil=$ncoil&quot;);
+
+smap = @. smap_raw / ssos_raw * mask # normalize and mask
+ssos = ssos_fun(smap) # SSoS
+@assert all(≈(1), @view ssos[mask]) # verify ≈ 1
+smaps = [eachslice(smap; dims = ndims(smap))...] # stack
+p3 = jif(x, y, smaps, &quot;|Sensitivity maps normalized|&quot;)
+p4 = jif(x, y, map(x -&gt; angle.(x), smaps), &quot;∠Sensitivity maps&quot;; color=:hsv)
+jim(p1, p2, p3, p4)</code></pre><img src="53168084.svg" alt="Example block output"/><p>Frequency sample vectors; crucial to match <code>mri_smap_basis</code> internals!</p><pre><code class="language-julia hljs">fx = (-(nx÷2):(nx÷2-1)) / (nx*dx)
+fy = (-(ny÷2):(ny÷2-1)) / (ny*dy)
+gx, gy = ndgrid(fx, fy);</code></pre><p>Somewhat random 1D phase-encode sampling:</p><pre><code class="language-julia hljs">seed!(0); sampfrac = 0.3; samp = rand(ny÷2) .&lt; sampfrac
+tmp = rand(ny÷2) .&lt; 0.5; samp = [samp .* tmp; reverse(samp .* .!tmp)] # symmetry
+samp .|= (abs.(fy*dy) .&lt; 1/8) # fully sampled center ±1/8 phase-encodes
+ny_count = count(samp)
+samp = trues(nx) * samp&#39;
+samp_frac = round(100*count(samp) / (nx*ny), digits=2)
+jim(fx, fy, samp, title=&quot;k-space sampling ($ny_count / $ny = $samp_frac%)&quot;)</code></pre><img src="02be3afa.svg" alt="Example block output"/><p>To avoid an inverse crime, here we use the 2012 method of <a href="https://doi.org/10.1109/TMI.2011.2174158">Guerquin-Kern et al.</a> and use the analytical k-space values of the phantom combined with an analytical model for the sensitivity maps.</p><pre><code class="language-julia hljs">kmax = 7
+fit = mri_smap_fit(smaps, embed; mask, kmax, deltas=(dx,dy))
+jim(
+ jif(x, y, cfun(smaps), &quot;Original maps&quot;; clim=(-1,1), nrow=4),
+ jif(x, y, cfun(fit.smaps), &quot;Fit maps&quot;; clim=(-1,1), nrow=4),
+ jif(x, y, cfun(100 * (fit.smaps - smaps)), &quot;error * 100&quot;; nrow=4),
+ layout = (1,3),
+)</code></pre><img src="1b20dc04.svg" alt="Example block output"/><p>Analytical spectra computation for complex phantom using all smaps. (No inverse crime here.)</p><pre><code class="language-julia hljs">ytrue = mri_spectra(gx[samp], gy[samp], object, fit)
+ytrue = hcat(ytrue...)
+ytrue = ComplexF32.(ytrue) # save memory
+size(ytrue)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(17088, 4)</code></pre><p>Noisy under-sampled k-space data:</p><pre><code class="language-julia hljs">sig = 1
+ydata = ytrue + oneunit(eltype(ytrue)) *
+    sig * √(2f0) * randn(ComplexF32, size(ytrue)) # complex noise with units!
+ysnr = 20 * log10(norm(ytrue) / norm(ydata - ytrue)) # data SNR in dB</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">46.20098f0</code></pre><p>Display zero-filled data:</p><pre><code class="language-julia hljs">logger = (x; min=-6, up=maximum(abs,x)) -&gt; log10.(max.(abs.(x) / up, (10.)^min))
+jim(:abswarn, false) # suppress warnings about showing magnitude
+tmp = embed(ytrue[:,1],samp)
+jim(
+ jif(fx, fy, logger(tmp),
+    title=&quot;k-space |data|\n(zero-filled, coil 1)&quot;,
+    xlabel=&quot;νx&quot;, ylabel=&quot;νy&quot;),
+ jif(fx, fy, angle.(tmp),
+    title=&quot;∠data, coil 1&quot;; color=:hsv)
+)</code></pre><img src="2408c3ac.svg" alt="Example block output"/><h2 id="Prepare-to-reconstruct"><a class="docs-heading-anchor" href="#Prepare-to-reconstruct">Prepare to reconstruct</a><a id="Prepare-to-reconstruct-1"></a><a class="docs-heading-anchor-permalink" href="#Prepare-to-reconstruct" title="Permalink"></a></h2><p>Create a system matrix (encoding matrix) and an initial image.</p><p>The system matrix is a <code>LinearMapAO</code> object, akin to a <code>fatrix</code> in <a href="https://github.com/JeffFessler/mirt/tree/main/systems/%40fatrix2">Matlab MIRT</a>.</p><p>This system model (&quot;encoding matrix&quot;) is for a 2D image <code>x</code> being mapped to an array of size <code>count(samp) × ncoil</code> k-space data.</p><p>Here we construct it from FFT and coil map components. So this is like &quot;seeing the sausage being made.&quot;</p><p>The <code>dx * dy</code> scale factor here is required because the true k-space data <code>ytrue</code> comes from an analytical Fourier transform, but the reconstruction uses a discrete Fourier transform. This factor is also needed from a unit-balance perspective.</p><pre><code class="language-julia hljs">Ascale = Float32(dx * dy)
+A = Ascale * Asense(samp, smaps) # operator!
+(size(A), A._odim, A._idim)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((68352, 49152), (17088, 4), (192, 256))</code></pre><p>Compare the analytical k-space data with the discrete model k-space data:</p><pre><code class="language-julia hljs">y0 = embed(ytrue, samp) # analytical
+y1 = embed(A * Xtrue, samp) # discrete
+jim(
+ jif(logger(y0; up=maximum(abs,y0)), &quot;analytical&quot;; clim=(-6,0)),
+ jif(logger(y1; up=maximum(abs,y0)), &quot;discrete&quot;; clim=(-6,0)),
+ jif(logger(y1 - y0; up=maximum(abs,y0)), &quot;difference&quot;),
+)
+norm(y1) / norm(y0) # scale factor is ≈1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.9995023f0</code></pre><p>Initial image based on zero-filled adjoint reconstruction. Note the <code>(dx*dy)²</code> scale factor here!</p><pre><code class="language-julia hljs">nrmse = (x) -&gt; round(norm(x - Xtrue) / norm(Xtrue) * 100, digits=1)
+X0 = 1.0f0/(nx*ny) * (A&#39; * ydata) / (dx*dy)^2
+jim(x, y, X0, &quot;|X0|: initial image; NRMSE $(nrmse(X0))%&quot;)</code></pre><img src="8446861a.svg" alt="Example block output"/><h2 id="Wavelet-sparsity-in-synthesis-form"><a class="docs-heading-anchor" href="#Wavelet-sparsity-in-synthesis-form">Wavelet sparsity in synthesis form</a><a id="Wavelet-sparsity-in-synthesis-form-1"></a><a class="docs-heading-anchor-permalink" href="#Wavelet-sparsity-in-synthesis-form" title="Permalink"></a></h2><p>The image reconstruction optimization problem here is</p><p class="math-container">\[\arg \min_{x}
+\frac{1}{2} \| A x - y \|_2^2 + \beta \; \| W x \|_1\]</p><p>where</p><ul><li><span>$y$</span> is the k-space data,</li><li><span>$A$</span> is the system model (simply Fourier encoding <code>F</code> here),</li><li><span>$W$</span> is an orthogonal discrete (Haar) wavelet transform, again implemented as a <code>LinearMapAA</code> object.</li></ul><p>Because <span>$W$</span> is unitary, we make the change of variables <span>$z = W x$</span> and solve for <span>$z$</span> and then let <span>$x = W&#39; z$</span> at the end. In fact we use a weighted 1-norm where only the detail wavelet coefficients are regularized, not the approximation coefficients.</p><p>Orthogonal discrete wavelet transform operator (<code>LinearMapAO</code>):</p><pre><code class="language-julia hljs">W, scales, _ = Aodwt((nx,ny) ; T = eltype(A))
+isdetail = scales .&gt; 0
+jim(
+ jif(scales, &quot;wavelet scales&quot;),
+ jif(real(W * Xtrue) .* isdetail, &quot;wavelet detail coefficients\nreal for Xtrue&quot;),
+)</code></pre><img src="6925d0c5.svg" alt="Example block output"/><p>Inputs needed for proximal gradient methods. The trickiest part of this is determining a bound on the Lipschitz constant, i.e., the spectral norm of <span>$(AW&#39;)&#39;(AW&#39;)$</span>, which is the same as the spectral norm of <span>$A&#39;A$</span> because <span>$W$</span> is unitary. Here we have SSOS=1 for the coil maps, so we just need to account for the number of voxels (because <code>fft</code> &amp; <code>bfft</code> are not the unitary DFT) and for the scale factor. (If SSOS was nonuniform, we would use eqn. (6) of <a href="https://doi.org/10.1109/TMI.2014.2363034">Matt Muckley&#39;s BARISTA paper</a>. Submit an issue if you need an example using that.)</p><pre><code class="language-julia hljs">f_Lz = Ascale^2 * nx*ny # Lipschitz constant
+Az = A * W&#39; # another operator!
+Fnullz = (z) -&gt; 0 # cost function in `z` not needed
+f_gradz = (z) -&gt; Az&#39; * (Az * z - ydata)
+regz = 0.03 * nx * ny # oracle from Xtrue wavelet coefficients!
+costz = (z) -&gt; 1/2 * norm(Az * z - ydata)^2 + regz * norm(z,1) # 1-norm regularizer
+soft = (z,c) -&gt; sign(z) * max(abs(z) - c, 0) # soft thresholding
+g_prox = (z,c) -&gt; soft.(z, isdetail .* (regz * c)) # proximal operator (shrink details only)
+z0 = W * X0
+jim(
+ jif(z0, &quot;|wavelet coefficients|&quot;),
+ jif(z0 .* isdetail, &quot;|detail coefficients|&quot;),
+ ; plot_title = &quot;Initial&quot;,
+)</code></pre><img src="d03a2fb9.svg" alt="Example block output"/><h2 id="Iterate"><a class="docs-heading-anchor" href="#Iterate">Iterate</a><a id="Iterate-1"></a><a class="docs-heading-anchor-permalink" href="#Iterate" title="Permalink"></a></h2><p>Run ISTA=PGM and FISTA=FPGM and POGM, the latter two with adaptive restart. See <a href="https://doi.org/10.1007/s10957-018-1287-4">Kim &amp; Fessler, 2018</a> for adaptive restart algorithm details.</p><p>Functions for tracking progress:</p><pre><code class="language-julia hljs">function fun_ista(iter, xk_z, yk, is_restart)
+    xh = W&#39; * xk_z
+    return (costz(xk_z), nrmse(xh), is_restart) # , psnr(xh) # time()
+end
+
+function fun_fista(iter, xk, yk_z, is_restart)
+    xh = W&#39; * yk_z
+    return (costz(yk_z), nrmse(xh), is_restart) # , psnr(xh) # time()
+end;</code></pre><p>Run and compare three proximal gradient methods:</p><pre><code class="language-julia hljs">niter = 20
+z_ista, out_ista = pogm_restart(z0, Fnullz, f_gradz, f_Lz;
+    mom=:pgm, niter,
+    restart=:none, restart_cutoff=0., g_prox, fun=fun_ista)
+Xista = W&#39;*z_ista
+@show nrmse(Xista)
+
+z_fista, out_fista = pogm_restart(z0, Fnullz, f_gradz, f_Lz;
+    mom=:fpgm, niter,
+    restart=:gr, restart_cutoff=0., g_prox, fun=fun_fista)
+Xfista = W&#39;*z_fista
+@show nrmse(Xfista)
+
+z_pogm, out_pogm = pogm_restart(z0, Fnullz, f_gradz, f_Lz;
+    mom=:pogm, niter,
+    restart=:gr, restart_cutoff=0., g_prox, fun=fun_fista)
+Xpogm = W&#39;*z_pogm
+@show nrmse(Xpogm)
+
+jim(
+ jif(x, y, Xfista, &quot;FISTA/FPGM&quot;),
+ jif(x, y, Xpogm, &quot;POGM with ODWT&quot;),
+)</code></pre><img src="eaab6397.svg" alt="Example block output"/><h2 id="Convergence-rate:-POGM-is-fastest"><a class="docs-heading-anchor" href="#Convergence-rate:-POGM-is-fastest">Convergence rate: POGM is fastest</a><a id="Convergence-rate:-POGM-is-fastest-1"></a><a class="docs-heading-anchor-permalink" href="#Convergence-rate:-POGM-is-fastest" title="Permalink"></a></h2><p>Plot cost function vs iteration:</p><pre><code class="language-julia hljs">cost_ista = [out_ista[k][1] for k in 1:niter+1]
+cost_fista = [out_fista[k][1] for k in 1:niter+1]
+cost_pogm = [out_pogm[k][1] for k in 1:niter+1]
+cost_min = min(minimum(cost_ista), minimum(cost_pogm))
+pc = plot(xlabel=&quot;iteration k&quot;, ylabel=&quot;Relative cost&quot;)
+scatter!(0:niter, cost_ista  .- cost_min, label=&quot;Cost ISTA&quot;)
+scatter!(0:niter, cost_fista .- cost_min, markershape=:square, label=&quot;Cost FISTA&quot;)
+scatter!(0:niter, cost_pogm  .- cost_min, markershape=:utriangle, label=&quot;Cost POGM&quot;)</code></pre><img src="1ce2400a.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>Plot NRMSE vs iteration:</p><pre><code class="language-julia hljs">nrmse_ista = [out_ista[k][2] for k in 1:niter+1]
+nrmse_fista = [out_fista[k][2] for k in 1:niter+1]
+nrmse_pogm = [out_pogm[k][2] for k in 1:niter+1]
+pn = plot(xlabel=&quot;iteration k&quot;, ylabel=&quot;NRMSE %&quot;)#, ylims=(3,6.5))
+scatter!(0:niter, nrmse_ista, label=&quot;NRMSE ISTA&quot;)
+scatter!(0:niter, nrmse_fista, markershape=:square, label=&quot;NRMSE FISTA&quot;)
+scatter!(0:niter, nrmse_pogm, markershape=:utriangle, label=&quot;NRMSE POGM&quot;)</code></pre><img src="a01bf1e9.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>Show error images:</p><pre><code class="language-julia hljs">snrfun = (x) -&gt; round(-20log10(nrmse(x)/100); digits=1)
+p1 = jif(x, y, Xtrue, &quot;|true|&quot;; clim=(0,2.5))
+p2 = jif(x, y, X0, &quot;|X0|: initial&quot;; clim=(0,2.5))
+p3 = jif(x, y, Xpogm, &quot;|POGM recon|&quot;; clim=(0,2.5))
+p5 = jif(x, y, X0 - Xtrue, &quot;|X0 error|&quot;; clim=(0,1), color=:cividis,
+   xlabel = &quot;NRMSE = $(nrmse(X0))%\n SNR = $(snrfun(X0)) dB&quot;)
+p6 = jif(x, y, Xpogm - Xtrue, &quot;|Xpogm error|&quot;; clim=(0,1), color=:cividis,
+   xlabel = &quot;NRMSE = $(nrmse(Xpogm))%\n SNR = $(snrfun(Xpogm)) dB&quot;)
+pe = jim(p2, p3, p5, p6)</code></pre><img src="88da63fb.svg" alt="Example block output"/><h2 id="Discussion"><a class="docs-heading-anchor" href="#Discussion">Discussion</a><a id="Discussion-1"></a><a class="docs-heading-anchor-permalink" href="#Discussion" title="Permalink"></a></h2><p>As reported in the optimization survey paper cited above, POGM converges faster than ISTA and FISTA.</p><p>The final images serve as a reminder that NRMSE (and PSNR) and dubious image quality metrics. The NRMSE after 20 iterations may seem only a bit lower than the NRMSE of the initial image, but aliasing artifacts (ripples) were greatly reduced by the CS-SENSE reconstruction method.</p><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../3-2d-t/">« 2D dynamic: temporal TV</a><a class="docs-footer-nextpage" href="../5-l-plus-s/">L+S 2D dynamic recon »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:02">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

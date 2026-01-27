@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>2D dynamic: temporal TV · Examples</title><meta name="title" content="2D dynamic: temporal TV · Examples"/><meta property="og:title" content="2D dynamic: temporal TV · Examples"/><meta property="twitter:title" content="2D dynamic: temporal TV · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/3-2d-t/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/3-2d-t/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/3-2d-t/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li class="is-active"><a class="tocitem" href>2D dynamic: temporal TV</a><ul class="internal"><li><a class="tocitem" href="#Define-dynamic-image-sequence"><span>Define dynamic image sequence</span></a></li><li><a class="tocitem" href="#Define-k-space-sampling"><span>Define k-space sampling</span></a></li><li><a class="tocitem" href="#System-matrix"><span>System matrix</span></a></li><li><a class="tocitem" href="#Initial-image"><span>Initial image</span></a></li><li><a class="tocitem" href="#Regularized-CG-reconstruction"><span>Regularized CG reconstruction</span></a></li></ul></li><li><a class="tocitem" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI </a></li><li><a class="tocitem" href="../5-l-plus-s/">L+S 2D dynamic recon</a></li><li><a class="tocitem" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI</a></li><li><a class="tocitem" href="../95-varpro1/">Variable Projection: One exponential</a></li><li><a class="tocitem" href="../99-varpro2/">VarPro: Two exponentials</a></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>2D dynamic: temporal TV</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>2D dynamic: temporal TV</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/3-2d-t.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="3-2d-t"><a class="docs-heading-anchor" href="#3-2d-t">2D dynamic: temporal TV</a><a id="3-2d-t-1"></a><a class="docs-heading-anchor-permalink" href="#3-2d-t" title="Permalink"></a></h1><p>This example illustrates 2D dynamic MRI image reconstruction from golden angle (GA) radial sampled k-space data collected with multiple coils (parallel MRI), with temporal &quot;TV&quot; regularizer (corner-rounded) using the Julia language.</p><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/3-2d-t.jl"><code>3-2d-t.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/3-2d-t.ipynb"><code>3-2d-t.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/3-2d-t.ipynb"><code>3-2d-t.ipynb</code></a>.</p><pre><code class="language-julia hljs">using ImageGeoms: ImageGeom
+using ImagePhantoms: shepp_logan, SouthPark, phantom, ellipse, spectrum
+using MIRTjim: jim, prompt
+using MIRT: Anufft, diffl_map, ncg
+using MIRT: ir_mri_sensemap_sim, ir_mri_kspace_ga_radial
+using Plots: gui, plot, scatter, default; default(markerstrokecolor=:auto, label=&quot;&quot;)
+using Plots: gif, @animate, Plots
+using LinearAlgebra: norm, dot, Diagonal
+using LinearMapsAA: LinearMapAA, block_diag
+using Random: seed!
+jim(:abswarn, false); # suppress warnings about display of |complex| images</code></pre><p>The following line is helpful when running this jl-file as a script; this way it will prompt user to hit a key after each image is displayed.</p><pre><code class="language-julia hljs">isinteractive() &amp;&amp; jim(:prompt, true);</code></pre><h2 id="Define-dynamic-image-sequence"><a class="docs-heading-anchor" href="#Define-dynamic-image-sequence">Define dynamic image sequence</a><a id="Define-dynamic-image-sequence-1"></a><a class="docs-heading-anchor-permalink" href="#Define-dynamic-image-sequence" title="Permalink"></a></h2><pre><code class="language-julia hljs">N = (60,64)
+fov = 220
+nt = 8 # frames
+ig = ImageGeom(; dims = N, deltas=(fov,fov) ./ N)
+
+object0 = shepp_logan(SouthPark(); fovs = (fov,fov))
+objects = Array{typeof(object0)}(undef, nt)
+xtrue = Array{ComplexF32}(undef, N..., nt)
+for it in 1:nt
+    tmp = copy(object0)
+    width2 = 15 + 5 * sin(2π*it/nt) # mouth open/close
+    mouth = tmp[2]
+    tmp[2] = ellipse(mouth.center, (mouth.width[1], width2), mouth.angle[1], mouth.value)
+    objects[it] = tmp
+    xtrue[:,:,it] = phantom(axes(ig)..., tmp, 4)
+end
+jimxy = (args...; aspect_ratio=1, kwargs...) -&gt;
+    jim(axes(ig)..., args...; aspect_ratio, kwargs...)
+jimxy(xtrue, &quot;True images&quot;; nrow=2)</code></pre><img src="c8d78140.svg" alt="Example block output"/><p>Animate true image:</p><pre><code class="language-julia hljs">anim1 = @animate for it in 1:nt
+    jimxy(xtrue[:,:,it], title=&quot;Frame $it&quot;)
+end
+gif(anim1; fps = 6)</code></pre><img src="cb17ac92.gif" alt="Example block output"/><p>Plot one time course to see temporal change:</p><pre><code class="language-julia hljs">ix,iy = 30,14
+plot(1:nt, abs.(xtrue[ix,iy,:]), label=&quot;ix=$ix, iy=$iy&quot;,
+    marker=:o, xlabel=&quot;frame&quot;)</code></pre><img src="5f1f16b0.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h2 id="Define-k-space-sampling"><a class="docs-heading-anchor" href="#Define-k-space-sampling">Define k-space sampling</a><a id="Define-k-space-sampling-1"></a><a class="docs-heading-anchor-permalink" href="#Define-k-space-sampling" title="Permalink"></a></h2><pre><code class="language-julia hljs">accelerate = 3
+nspf = round(Int, maximum(N)/accelerate) # spokes per frame
+
+Nro = maximum(N)
+Nspoke = nspf * nt
+kspace = ir_mri_kspace_ga_radial(; Nro, Nspoke)
+fovs = (fov, fov)
+kspace[:,:,1] ./= fovs[1]
+kspace[:,:,2] ./= fovs[2]
+kspace = reshape(kspace, Nro, nspf, nt, 2)
+(size(kspace), extrema(kspace))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((64, 21, 8, 2), (-0.0022727272f0, 0.002272619f0))</code></pre><p>Plot sampling (in units of cycles/pixel):</p><pre><code class="language-julia hljs">ps = Array{Any}(undef, nt)
+for it in 1:nt
+    ps[it] = scatter(kspace[:,:,it,1] * fovs[1], kspace[:,:,it,2] * fovs[2],
+        xtick=(-1:1)*0.5, ytick=(-1:1)*0.5, xlim=(-1,1).*0.5, ylim=(-1,1).*0.5,
+        aspect_ratio=1, markersize=1, title=&quot;Frame $it&quot;, widen=true)
+end
+plot(ps...; layout=(2,4))</code></pre><img src="2dbe4483.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();
+
+anim2 = @animate for it in 1:nt
+    plot(ps[it])
+end
+gif(anim2; fps = 6)</code></pre><img src="53ecd533.gif" alt="Example block output"/><p>Make sensitivity maps, normalized so SSoS = 1:</p><pre><code class="language-julia hljs">ncoil = 2
+smap_raw = ir_mri_sensemap_sim(dims=N, ncoil=ncoil, orbit_start=[90])
+p1 = jim(smap_raw, &quot;Sensitivity maps raw&quot;);
+
+sum_last = (f, x) -&gt; selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
+ssos_fun = smap -&gt; sqrt.(sum_last(abs2, smap)) # SSoS
+ssos_raw = ssos_fun(smap_raw)
+p2 = jim(ssos_raw, &quot;SSoS for ncoil=$ncoil&quot;);
+
+smap = smap_raw ./ ssos_raw
+p3 = jim(smap, &quot;Sensitivity maps&quot;);
+
+ssos = ssos_fun(smap) # SSoS
+@assert all(≈(1), ssos)
+jim(p1, p2, p3)</code></pre><img src="b676b8ba.svg" alt="Example block output"/><h2 id="System-matrix"><a class="docs-heading-anchor" href="#System-matrix">System matrix</a><a id="System-matrix-1"></a><a class="docs-heading-anchor-permalink" href="#System-matrix" title="Permalink"></a></h2><p>Make system matrix for dynamic non-Cartesian parallel MRI:</p><pre><code class="language-julia hljs">Fs = Array{Any}(undef, nt)
+for it in 1:nt # a NUFFT object for each frame
+    Ω = [kspace[:,:,it,1][:] kspace[:,:,it,2][:]] * fov * 2pi
+    Fs[it] = Anufft(Ω, N, n_shift = [N...]/2)
+end</code></pre><p>Block diagonal system matrix, with one NUFFT per frame</p><pre><code class="language-julia hljs">S = [Diagonal(vec(selectdim(smap, ndims(smap), ic))) for ic in 1:ncoil]
+SO = s -&gt; LinearMapAA(s ; idim=N, odim=N) # LinearMapAO for coil maps
+AS1 = F -&gt; vcat([F * SO(s) for s in S]...); # [A1*S1; ... ; A1*Sncoil]</code></pre><p>Linear operator input is <code>(N..., nt)</code>, output is <code>(nspf*Nro, Ncoil, nt)</code></p><pre><code class="language-julia hljs">A = block_diag([AS1(F) for F in Fs]...) # todo: refine show()
+(size(A), A._odim, A._idim)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((21504, 30720), (1344, 2, 8), (60, 64, 8))</code></pre><p>Simulate k-space data via an inverse crime (todo):</p><pre><code class="language-julia hljs">ytrue = A * xtrue
+snr2sigma = (db, yb) -&gt; # compute noise sigma from SNR (no sqrt(2) needed)
+    10^(-db/20) * norm(yb) / sqrt(length(yb))
+sig = Float32(snr2sigma(50, ytrue))
+seed!(0)
+y = ytrue + sig * randn(ComplexF32, size(ytrue))
+ysnr = 20*log10(norm(ytrue) / norm(y - ytrue)) # verify SNR</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">50.01468271839975</code></pre><h2 id="Initial-image"><a class="docs-heading-anchor" href="#Initial-image">Initial image</a><a id="Initial-image-1"></a><a class="docs-heading-anchor-permalink" href="#Initial-image" title="Permalink"></a></h2><p>Initial image via zero-fill and scaling: todo: should use density compensation, perhaps via <a href="https://github.com/JuliaGeometry/VoronoiDelaunay.jl">VoronoiDelaunay.jl</a></p><pre><code class="language-julia hljs">x0 = A&#39; * y # zero-filled recon (for each frame)
+tmp = A * x0 # (Nkspace, Ncoil, Nframe)
+x0 = (dot(tmp,y) / norm(tmp)^2) * x0 # scale sensibly
+jimxy(x0, &quot;initial image&quot;; nrow=2)</code></pre><img src="bb328595.svg" alt="Example block output"/><p>Temporal finite differences:</p><pre><code class="language-julia hljs">Dt = diffl_map((N..., nt), length(N)+1 ; T=eltype(A))
+tmp = Dt&#39; * (Dt * xtrue)
+jimxy(tmp, &quot;Time differences are sparse&quot;; nrow=2)</code></pre><img src="6930c29c.svg" alt="Example block output"/><h2 id="Regularized-CG-reconstruction"><a class="docs-heading-anchor" href="#Regularized-CG-reconstruction">Regularized CG reconstruction</a><a id="Regularized-CG-reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#Regularized-CG-reconstruction" title="Permalink"></a></h2><p>Run nonlinear CG on &quot;temporal edge-preserving&quot; regularized LS cost function</p><pre><code class="language-julia hljs">niter = 90
+delta = Float32(0.1) # small relative to temporal differences
+reg = Float32(2^20) # trial and error here
+ffair = (t,d) -&gt; d^2 * (abs(t)/d - log(1 + abs(t)/d))
+pot = z -&gt; ffair(z, delta)
+dpot = z -&gt; z / (Float32(1) + abs(z/delta))
+cost = x -&gt; 0.5 * norm(A*x - y)^2 + reg * sum(pot.(Dt * x))
+fun = (x,iter) -&gt; cost(x)
+gradf = [v -&gt; v - y, u -&gt; reg * dpot.(u)]
+curvf = [v -&gt; Float32(1), u -&gt; reg]
+(xh, out) = ncg([A, Dt], gradf, curvf, x0 ; niter, fun)
+costs = [out[i+1][1] for i=0:niter];</code></pre><p>Show results</p><pre><code class="language-julia hljs">pr = plot(
+    jimxy(xtrue, &quot;|xtrue|&quot;; nrow=2),
+    jimxy(xh, &quot;|recon|&quot;; nrow=2),
+    jimxy(xh-xtrue, &quot;|error|&quot;; nrow=2),
+    scatter(0:niter, log.(costs), label=&quot;cost&quot;, xlabel=&quot;iteration&quot;),
+)</code></pre><img src="41fbdb8a.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>Animate true, recon, error</p><pre><code class="language-julia hljs">anim3 = @animate for it in 1:nt
+    plot(
+        jimxy(xtrue[:,:,it], clim=(0,120), title=&quot;True&quot;),
+        jimxy(xh[:,:,it], clim=(0,120), title=&quot;|Recon|&quot;),
+        jimxy(xh[:,:,it] - xtrue[:,:,it], clim=(0,30), title=&quot;|Error|&quot;),
+        plot_title = &quot;Frame $it&quot;,
+        layout = (1,3),
+    )
+end
+gif(anim3; fps = 6)</code></pre><img src="969e9327.gif" alt="Example block output"/><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../2-cs-wl-l1-2d/">« Compressed Sensing 2D</a><a class="docs-footer-nextpage" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI  »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:01">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

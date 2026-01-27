@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>DCF-based &quot;preconditioning&quot; in MRI · Examples</title><meta name="title" content="DCF-based &quot;preconditioning&quot; in MRI · Examples"/><meta property="og:title" content="DCF-based &quot;preconditioning&quot; in MRI · Examples"/><meta property="twitter:title" content="DCF-based &quot;preconditioning&quot; in MRI · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/6-precon/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/6-precon/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/6-precon/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li><a class="tocitem" href="../3-2d-t/">2D dynamic: temporal TV</a></li><li><a class="tocitem" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI </a></li><li><a class="tocitem" href="../5-l-plus-s/">L+S 2D dynamic recon</a></li><li class="is-active"><a class="tocitem" href>DCF-based &quot;preconditioning&quot; in MRI</a><ul class="internal"><li><a class="tocitem" href="#Radial-k-space-sampling"><span>Radial k-space sampling</span></a></li><li><a class="tocitem" href="#Radial-k-space-data-for-Shepp-Logan-phantom"><span>Radial k-space data for Shepp-Logan phantom</span></a></li><li><a class="tocitem" href="#NUFFT-operator"><span>NUFFT operator</span></a></li><li><a class="tocitem" href="#Density-compensation"><span>Density compensation</span></a></li><li><a class="tocitem" href="#Unregularized-iterative-MRI-reconstruction"><span>Unregularized iterative MRI reconstruction</span></a></li></ul></li><li><a class="tocitem" href="../95-varpro1/">Variable Projection: One exponential</a></li><li><a class="tocitem" href="../99-varpro2/">VarPro: Two exponentials</a></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>DCF-based &quot;preconditioning&quot; in MRI</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>DCF-based &quot;preconditioning&quot; in MRI</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/6-precon.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="6-nufft"><a class="docs-heading-anchor" href="#6-nufft">DCF-based &quot;preconditioning&quot; in MRI</a><a id="6-nufft-1"></a><a class="docs-heading-anchor-permalink" href="#6-nufft" title="Permalink"></a></h1><p>This example illustrates how &quot;preconditioning&quot; based on sampling density compensation factors (DCFs) affects image reconstruction in MRI using the Julia language.</p><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/6-precon.jl"><code>6-precon.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/6-precon.ipynb"><code>6-precon.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/6-precon.ipynb"><code>6-precon.ipynb</code></a>.</p><p>The bottom line here is that DCF-based preconditioning gives an apparent speed-up when staring from a zero initial image, but leads to increased noise (worse error). Choosing a smart starting image, like an appropriately scaled gridding image, provides comparable speed-up without compromising noise.</p><p>First we add the Julia packages that are need for these examples. Change <code>false</code> to <code>true</code> in the following code block if you are using any of the following packages for the first time.</p><pre><code class="language-julia hljs">if false
+    import Pkg
+    Pkg.add([
+        &quot;InteractiveUtils&quot;
+        &quot;ImagePhantoms&quot;
+        &quot;LaTeXStrings&quot;
+        &quot;MIRTjim&quot;
+        &quot;MIRT&quot;
+        &quot;Plots&quot;
+        &quot;Unitful&quot;
+    ])
+end</code></pre><p>Now tell this Julia session to use the following packages. Run <code>Pkg.add()</code> in the preceding code block first, if needed.</p><pre><code class="language-julia hljs">using ImagePhantoms: shepp_logan, SheppLoganEmis, spectrum, phantom #, Gauss2
+using LaTeXStrings
+using LinearAlgebra: I, norm
+using MIRTjim: jim, prompt # jiffy image display
+using MIRT: Anufft, diffl_map, ncg
+using Plots; default(label=&quot;&quot;, markerstrokecolor=:auto)
+using Random: seed!; seed!(0)
+using Unitful: mm # physical units (mm here)
+using InteractiveUtils: versioninfo</code></pre><p>The following line is helpful when running this file as a script; this way it will prompt user to hit a key after each image is displayed.</p><pre><code class="language-julia hljs">isinteractive() &amp;&amp; jim(:prompt, true);</code></pre><h2 id="Radial-k-space-sampling"><a class="docs-heading-anchor" href="#Radial-k-space-sampling">Radial k-space sampling</a><a id="Radial-k-space-sampling-1"></a><a class="docs-heading-anchor-permalink" href="#Radial-k-space-sampling" title="Permalink"></a></h2><p>We consider radial sampling as a simple representative non-Cartesian case. Consider imaging a 256mm × 256mm field of FOV with the goal of reconstructing a 128 × 128 pixel image. The following radial and angular k-space sampling is reasonable.</p><pre><code class="language-julia hljs">N = 128
+FOV = 256mm # physical units!
+Δx = FOV / N # pixel size
+kmax = 1 / 2Δx
+kr = ((-N÷2):(N÷2)) / (N÷2) * kmax # radial sampling in k-space
+Nr = length(kr) # N+1
+Nϕ = N-2 # theoretically should be about π/2 * N
+kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
+νx = kr * cos.(kϕ)&#39; # N × Nϕ k-space sampling in cycles/mm
+νy = kr * sin.(kϕ)&#39;
+psamp = plot(νx, νy, size = (420,400),
+    xaxis = (L&quot;\nu_{\mathrm{x}}&quot;, (-1,1) .* (1.1 * kmax), (-1:1) * kmax),
+    yaxis = (L&quot;\nu_{\mathrm{y}}&quot;, (-1,1) .* (1.1 * kmax), (-1:1) * kmax),
+    aspect_ratio = 1,
+    title = &quot;Radial k-space sampling&quot;,
+)</code></pre><img src="963061f9.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>For the NUFFT routines considered here, the sampling arguments must be &quot;Ω&quot; values: digital frequencies have pseudo-units of radians / pixel.</p><pre><code class="language-julia hljs">Ωx = (2π * Δx) * νx # N × Nϕ grid of k-space sample locations
+Ωy = (2π * Δx) * νy # in pseudo-units of radians / sample
+
+pom = scatter(Ωx, Ωy,
+    xaxis = (L&quot;\Omega_x&quot;, (-1,1) .* 1.1π, ((-1:1)*π, [&quot;-π&quot;, &quot;0&quot;, &quot;π&quot;])),
+    yaxis = (L&quot;\Omega_y&quot;, (-1,1) .* 1.1π, ((-1:1)*π, [&quot;-π&quot;, &quot;0&quot;, &quot;π&quot;])),
+    aspect_ratio = 1, markersize = 0.5,
+    title = &quot;Radial k-space sampling&quot;,
+)</code></pre><img src="b6263f02.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h2 id="Radial-k-space-data-for-Shepp-Logan-phantom"><a class="docs-heading-anchor" href="#Radial-k-space-data-for-Shepp-Logan-phantom">Radial k-space data for Shepp-Logan phantom</a><a id="Radial-k-space-data-for-Shepp-Logan-phantom-1"></a><a class="docs-heading-anchor-permalink" href="#Radial-k-space-data-for-Shepp-Logan-phantom" title="Permalink"></a></h2><p>Get the ellipse parameters for a MRI-suitable version of the Shepp-Logan phantom and calculate (analytically) the radial k-space data. Then display in polar coordinates.</p><pre><code class="language-julia hljs">object = shepp_logan(SheppLoganEmis(); fovs=(FOV,FOV))
+data = spectrum(object).(νx,νy)
+data = data / oneunit(eltype(data)) # abandon units at this point
+dscale = 10000
+jimk = (args...; kwargs...) -&gt; jim(kr, kϕ, args...;
+    xaxis = (L&quot;k_r&quot;, (-1,1) .* kmax, (-1:1) .* maximum(abs, kr)),
+    yaxis = (L&quot;k_{\phi}&quot;, (0,π), (0,π)),
+    aspect_ratio = :none,
+    kwargs...
+)
+pk = jimk(abs.(data) / dscale; title=&quot;k-space data magnitude / $dscale&quot;)</code></pre><img src="f3f1b7f3.svg" alt="Example block output"/><p>Here is what the phantom should look like ideally.</p><pre><code class="language-julia hljs">x = (-(N÷2):(N÷2-1)) * Δx
+y = (-(N÷2):(N÷2-1)) * Δx
+ideal = phantom(x, y, object, 2)
+clim = (0, 9)
+p0 = jim(x, y, ideal; xlabel=L&quot;x&quot;, ylabel=L&quot;y&quot;, clim, size = (460,400),
+ title=&quot;True Shepp-Logan phantom&quot;)</code></pre><img src="f4046932.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h2 id="NUFFT-operator"><a class="docs-heading-anchor" href="#NUFFT-operator">NUFFT operator</a><a id="NUFFT-operator-1"></a><a class="docs-heading-anchor-permalink" href="#NUFFT-operator" title="Permalink"></a></h2><p>with sanity check</p><pre><code class="language-julia hljs">A = Anufft([vec(Ωx) vec(Ωy)], (N,N); n_shift = [N/2,N/2]) # todo: odim=(Nr,Nϕ)
+dx = FOV / N # pixel size
+dx = dx / oneunit(dx) # abandon units for now
+Ax_to_y = Ax -&gt; dx^2 * reshape(Ax, Nr, Nϕ) # trick
+pj1 = jimk(abs.(Ax_to_y(A * ideal)) / dscale, &quot;|A*x|/$dscale&quot;)
+pj2 = jimk(abs.(Ax_to_y(A * ideal) - data) / dscale, &quot;|A*x-y|/$dscale&quot;)
+plot(pk, pj1, pj2)</code></pre><img src="66a73b01.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h2 id="Density-compensation"><a class="docs-heading-anchor" href="#Density-compensation">Density compensation</a><a id="Density-compensation-1"></a><a class="docs-heading-anchor-permalink" href="#Density-compensation" title="Permalink"></a></h2><p>Radial sampling needs (N+1) DSF weights along k-space polar coordinate.</p><p>We use the improved method of <a href="https://doi.org/10.1002/mrm.1910360617">Lauzon&amp;Rutt, 1996</a> and <a href="https://doi.org/10.1002/mrm.1910400317">Joseph, 1998</a>.</p><pre><code class="language-julia hljs">dν = 1/FOV # k-space radial sample spacing
+dcf = π / Nϕ * dν * abs.(kr) # see lauzon:96:eop, joseph:98:sei
+dcf[kr .== 0/mm] .= π * (dν/2)^2 / Nϕ # area of center disk
+dcf = dcf / oneunit(eltype(dcf)) # kludge: units not working with LinearMap now
+gridded4 = A&#39; * vec(dcf .* data)
+p4 = jim(x, y, gridded4; xlabel=L&quot;x&quot;, ylabel=L&quot;y&quot;, clim,
+ size = (460,400),
+ title=&quot;NUFFT gridding with better ramp-filter DCF&quot;)</code></pre><img src="6005aba4.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>A profile shows it is &quot;decent&quot; but not amazing.</p><pre><code class="language-julia hljs">pp = plot(x, real(gridded4[:,N÷2]), label=&quot;Modified ramp DCF&quot;)
+plot!(x, real(ideal[:,N÷2]), label=&quot;Ideal&quot;, xlabel=L&quot;x&quot;, ylabel=&quot;middle profile&quot;)</code></pre><img src="809ae3d3.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h2 id="Unregularized-iterative-MRI-reconstruction"><a class="docs-heading-anchor" href="#Unregularized-iterative-MRI-reconstruction">Unregularized iterative MRI reconstruction</a><a id="Unregularized-iterative-MRI-reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#Unregularized-iterative-MRI-reconstruction" title="Permalink"></a></h2><p>Apply a few iterations of conjugate gradient (CG) to approach a minimizer of the least-squares cost function:</p><p class="math-container">\[\arg \min_{x} \frac{1}{2} ‖ A x - y ‖₂².\]</p><p>Using a zero-image as the starting point <span>$x₀$</span> leads to slow convergence.</p><p>Using &quot;preconditioning&quot; by including DCF values in the cost function (a kind of weighted LS) appears to give much faster convergence, but leads to suboptimal image quality especially in the presence of noise.</p><p>Using a decent initial image (e.g., a gridded image with appropriate scaling) is preferable.</p><p>There is a subtle point here about <code>dx</code> when converting the Fourier integral to a sum. Here <code>yideal</code> is <code>data/dx^2</code>.</p><pre><code class="language-julia hljs">nrmse = x -&gt; norm(x - ideal) / norm(ideal) * 100
+fun = (x, iter) -&gt; nrmse(x)
+
+snr2sigma(db, y) = 10^(-db/20) * norm(y) / sqrt(length(y))
+yideal = vec(data/dx^2)
+σnoise = snr2sigma(40, yideal)
+ydata = yideal + σnoise * randn(eltype(yideal), size(yideal))
+snr = 20 * log10(norm(yideal) / norm(ydata - yideal)) # check
+gradf = u -&gt; u - ydata # gradient of f(u) = 1/2 ‖ u - y ‖²
+curvf = u -&gt; 1 # curvature of f(u)
+
+x0 = 0 * ideal
+niter = 15
+xls0, out0 = ncg([A], [gradf], [curvf], x0; niter, fun)
+
+default(linewidth = 2)
+ppr = plot(
+ xaxis = (&quot;iteration&quot;, (0, niter)),
+ yaxis = (&quot;NRMSE&quot;, (0, 100), 0:20:100),
+ widen = true,
+)
+plot!(ppr, 0:niter, out0,
+ label = &quot;LS-CG (&#39;non-preconditioned&#39;), 0 init&quot;,
+ color = :black, marker = :circle,
+);</code></pre><p>&quot;Preconditioned&quot; (aka &quot;weighted&quot;) version</p><pre><code class="language-julia hljs">precon = vec(repeat(dcf, Nϕ));</code></pre><p>gradient of fp(u) = 1/2 ‖ P^{1/2} (u - y) ‖²</p><pre><code class="language-julia hljs">gradfp = u -&gt; precon .* (u - ydata)
+curvfp = u -&gt; precon # curvature of fp(u)
+
+xlsp, out2 = ncg([A], [gradfp], [curvfp], x0; niter, fun)
+plot!(ppr, 0:niter, out2,
+ label = &quot;WLS-CG with DCF weighting, 0 init&quot;, color = :red, marker = :x,
+)</code></pre><img src="6e8fdc61.svg" alt="Example block output"/><p>Smart start with gridded image</p><pre><code class="language-julia hljs">x0 = gridded4 # initial guess: decent gridding reconstruction
+xls1, out1 = ncg([A], [gradf], [curvf], x0; niter, fun)
+plot!(ppr, 0:niter, out1,
+  label = &quot;LS-CG, gridding init&quot;, color=:blue, marker=:+,
+)</code></pre><img src="92b544c1.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><p>The images look very similar at 15 iterations</p><pre><code class="language-julia hljs">elim = (0, 1)
+tmp = stack((ideal, xls0, xlsp, xls1))
+err = stack((ideal, xls0, xlsp, xls1)) .- ideal
+p5 = plot(
+ jim(x, y, tmp; title = &quot;Ideal | 0 init | precon | grid init&quot;,
+  clim, nrow=1, size = (600, 200)),
+ jim(x, y, err; title = &quot;Error&quot;, color=:cividis,
+  clim = elim, nrow=1, size = (600, 200)),
+ layout = (2, 1),
+ size = (650, 450),
+)</code></pre><img src="65986bc2.svg" alt="Example block output"/><pre><code class="language-julia hljs">isinteractive() &amp;&amp; prompt();</code></pre><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../5-l-plus-s/">« L+S 2D dynamic recon</a><a class="docs-footer-nextpage" href="../95-varpro1/">Variable Projection: One exponential »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:01">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

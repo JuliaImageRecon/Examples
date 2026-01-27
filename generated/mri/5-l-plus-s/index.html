@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>L+S 2D dynamic recon · Examples</title><meta name="title" content="L+S 2D dynamic recon · Examples"/><meta property="og:title" content="L+S 2D dynamic recon · Examples"/><meta property="twitter:title" content="L+S 2D dynamic recon · Examples"/><meta name="description" content="Documentation for Examples."/><meta property="og:description" content="Documentation for Examples."/><meta property="twitter:description" content="Documentation for Examples."/><meta property="og:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/5-l-plus-s/"/><meta property="twitter:url" content="https://JuliaImageRecon.github.io/Examples/generated/mri/5-l-plus-s/"/><link rel="canonical" href="https://JuliaImageRecon.github.io/Examples/generated/mri/5-l-plus-s/"/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Examples</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><span class="tocitem">MRI</span><ul><li><a class="tocitem" href="../1-nufft/">NUFFT Overview</a></li><li><a class="tocitem" href="../2-cs-wl-l1-2d/">Compressed Sensing 2D</a></li><li><a class="tocitem" href="../3-2d-t/">2D dynamic: temporal TV</a></li><li><a class="tocitem" href="../4-cs-sense-2d/">Compressed Sensing 2D pMRI </a></li><li class="is-active"><a class="tocitem" href>L+S 2D dynamic recon</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#Read-data"><span>Read data</span></a></li><li><a class="tocitem" href="#System-matrix"><span>System matrix</span></a></li><li><a class="tocitem" href="#LS-reconstruction"><span>L+S reconstruction</span></a></li><li><a class="tocitem" href="#Discussion"><span>Discussion</span></a></li></ul></li><li><a class="tocitem" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI</a></li><li><a class="tocitem" href="../95-varpro1/">Variable Projection: One exponential</a></li><li><a class="tocitem" href="../99-varpro2/">VarPro: Two exponentials</a></li></ul></li><li><span class="tocitem">CT</span><ul><li><a class="tocitem" href="../../ct/1-fbp/">FBP Overview</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">MRI</a></li><li class="is-active"><a href>L+S 2D dynamic recon</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>L+S 2D dynamic recon</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/5-l-plus-s.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="5-l-plus-s"><a class="docs-heading-anchor" href="#5-l-plus-s">L+S 2D dynamic recon</a><a id="5-l-plus-s-1"></a><a class="docs-heading-anchor-permalink" href="#5-l-plus-s" title="Permalink"></a></h1><p>This page illustrates dynamic parallel MRI image reconstruction using a low-rank plus sparse (L+S) model optimized by a fast algorithm described in the paper by Claire Lin and Jeff Fessler <a href="https://doi.org/10.1109/TCI.2018.2882089">Efficient Dynamic Parallel MRI Reconstruction for the Low-Rank Plus Sparse Model</a>, IEEE Trans. on Computational Imaging, 5(1):17-26, 2019, by Claire Lin and Jeff Fessler, EECS Department, University of Michigan.</p><p>The Julia code here is a translation of part of the <a href="https://github.com/JeffFessler/reproduce-l-s-dynamic-mri">Matlab code</a> used in the original paper.</p><p>If you use this code, please cite that paper.</p><p>This page comes from a single Julia file: <a href="https://github.com/JuliaImageRecon/Examples/blob/main/docs/lit/mri/5-l-plus-s.jl"><code>5-l-plus-s.jl</code></a>.</p><p>You can access the source code for such Julia documentation using the &#39;Edit on GitHub&#39; link in the top right. You can view the corresponding notebook in <a href="https://nbviewer.org/">nbviewer</a> here: <a href="https://nbviewer.org/github/JuliaImageRecon/Examples/tree/gh-pages/generated/mri/5-l-plus-s.ipynb"><code>5-l-plus-s.ipynb</code></a>, or open it in <a href="https://mybinder.org/">binder</a> here: <a href="https://mybinder.org/v2/gh/JuliaImageRecon/Examples/gh-pages?filepath=generated/mri/5-l-plus-s.ipynb"><code>5-l-plus-s.ipynb</code></a>.</p><h3 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h3><p>Packages needed here.</p><pre><code class="language-julia hljs"># using Unitful: s
+using Plots; cgrad, default(markerstrokecolor=:auto, label=&quot;&quot;)
+using MIRT: Afft, Asense, embed
+using MIRT: pogm_restart, poweriter
+using MIRTjim: jim, prompt
+using FFTW: fft!, bfft!, fftshift!
+using LinearMapsAA: LinearMapAA, block_diag, redim, undim
+using MAT: matread
+import Downloads # todo: use Fetch or DataDeps?
+using LinearAlgebra: dot, norm, svd, svdvals, Diagonal, I
+using Random: seed!
+using Statistics: mean
+using LaTeXStrings</code></pre><p>The following line is helpful when running this file as a script; this way it will prompt user to hit a key after each figure is displayed.</p><pre><code class="language-julia hljs">jif(args...; kwargs...) = jim(args...; prompt=false, kwargs...)
+isinteractive() ? jim(:prompt, true) : prompt(:draw);</code></pre><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>Dynamic image reconstruction using a &quot;low-rank plus sparse&quot; or &quot;L+S&quot; approach was proposed by <a href="https://doi.org/10.1002/mrm.25240">Otazo et al.</a> and uses the following cost function:</p><p class="math-container">\[X = \hat{L} + \hat{S}
+,\qquad
+(\hat{L}, \hat{S})
+= \arg \min_{L,S} \frac{1}{2} \| E (L + S) - d \|_2^2
+ + λ_L \| L \|_*
+ + λ_S \| vec(T S) \|_1\]</p><p>where <span>$T$</span> is a temporal unitary FFT, <span>$E$</span> is an encoding operator (system matrix), and <span>$d$</span> is Cartesian undersampled multicoil k-space data.</p><p>The Otazo paper used an iterative soft thresholding algorithm (ISTA) to solve this optimization problem. Using FISTA is faster, but using the <a href="https://doi.org/10.1137/16m108104x">proximal optimized gradient method (POGM)</a> with <a href="https://doi.org/10.1007/s10957-018-1287-4">adaptive restart</a> is even faster.</p><p>This example reproduces part of Figures 1 &amp; 2 in <a href="https://doi.org/10.1109/TCI.2018.2882089">Claire Lin&#39;s paper</a>, based on the <a href="https://github.com/JeffFessler/reproduce-l-s-dynamic-mri/blob/master/examples/example_cardiac_perf.m">cardiac perfusion example</a>.</p><h2 id="Read-data"><a class="docs-heading-anchor" href="#Read-data">Read data</a><a id="Read-data-1"></a><a class="docs-heading-anchor-permalink" href="#Read-data" title="Permalink"></a></h2><pre><code class="language-julia hljs">if !@isdefined(data)
+    url = &quot;https://github.com/JeffFessler/MIRTdata/raw/main/mri/lin-19-edp/&quot;
+    dataurl = url * &quot;cardiac_perf_R8.mat&quot;
+    data = matread(Downloads.download(dataurl))
+    xinfurl = url * &quot;Xinf.mat&quot;
+    Xinf = matread(Downloads.download(xinfurl))[&quot;Xinf&quot;][&quot;perf&quot;] # (128,128,40)
+end;</code></pre><p>Show converged image as a preview:</p><pre><code class="language-julia hljs">pinf = jim(Xinf, L&quot;\mathrm{Converged\ image\ sequence } X_∞&quot;)</code></pre><img src="92529c0f.svg" alt="Example block output"/><p>Organize k-space data:</p><pre><code class="language-julia hljs">if !@isdefined(ydata0)
+    ydata0 = data[&quot;kdata&quot;] # k-space data full of zeros
+    ydata0 = permutedims(ydata0, [1, 2, 4, 3]) # (nx,ny,nc,nt)
+    ydata0 = ComplexF32.(ydata0)
+end
+(nx, ny, nc, nt) = size(ydata0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(128, 128, 12, 40)</code></pre><p>Extract sampling pattern from zeros of k-space data:</p><pre><code class="language-julia hljs">if !@isdefined(samp)
+    samp = ydata0[:,:,1,:] .!= 0
+    for ic in 2:nc # verify it is same for all coils
+        @assert samp == (ydata0[:,:,ic,:] .!= 0)
+    end
+    kx = -(nx÷2):(nx÷2-1)
+    ky = -(ny÷2):(ny÷2-1)
+    psamp = jim(kx, ky, samp, &quot;Sampling patterns for $nt frames&quot;;
+       xlabel=L&quot;k_x&quot;, ylabel=L&quot;k_y&quot;)
+end</code></pre><img src="a9c54426.svg" alt="Example block output"/><p>Are all k-space rows are sampled in one of the 40 frames? Sadly no. The 10 blue rows shown below are never sampled. A better sampling pattern design could have avoided this issue.</p><pre><code class="language-julia hljs">samp_sum = sum(samp, dims=3)
+color = cgrad([:blue, :black, :white], [0, 1/2nt, 1])
+pssum = jim(kx, ky, samp_sum; xlabel=&quot;kx&quot;, ylabel=&quot;ky&quot;,
+    color, clim=(0,nt), title=&quot;Number of sampled frames out of $nt&quot;)</code></pre><img src="2fd9f1e3.svg" alt="Example block output"/><p>Prepare coil sensitivity maps</p><pre><code class="language-julia hljs">if !@isdefined(smaps)
+    smaps_raw = data[&quot;b1&quot;] # raw coil sensitivity maps
+    jim(smaps_raw, &quot;Raw |coil maps| for $nc coils&quot;)
+    sum_last = (f, x) -&gt; selectdim(sum(f, x; dims=ndims(x)), ndims(x), 1)
+    ssos_fun = smap -&gt; sqrt.(sum_last(abs2, smap)) # SSoS
+    ssos_raw = ssos_fun(smaps_raw)
+    smaps = smaps_raw ./ ssos_raw
+    ssos = ssos_fun(smaps)
+    @assert all(≈(1), ssos)
+    pmap = jim(smaps, &quot;Normalized |coil maps| for $nc coils&quot;)
+end</code></pre><img src="e571710b.svg" alt="Example block output"/><p>Temporal unitary FFT sparsifying transform for image sequence of size <code>(nx, ny, nt)</code>:</p><pre><code class="language-julia hljs">TF = Afft((nx,ny,nt), 3; unitary=true) # unitary FFT along 3rd (time) dimension
+if false # verify adjoint
+    tmp1 = randn(ComplexF32, nx, ny, nt)
+    tmp2 = randn(ComplexF32, nx, ny, nt)
+    @assert dot(tmp2, TF * tmp1) ≈ dot(TF&#39; * tmp2, tmp1)
+    @assert TF&#39; * (TF * tmp1) ≈ tmp1
+    (size(TF), TF._odim, TF._idim)
+end</code></pre><p>Examine temporal Fourier sparsity of Xinf. The low temporal frequencies dominate, as expected, because Xinf was reconstructed using this regularizer!</p><pre><code class="language-julia hljs">tmp = TF * Xinf
+ptfft = jim(tmp, &quot;|Temporal FFT of Xinf|&quot;)</code></pre><img src="bed9894a.svg" alt="Example block output"/><h2 id="System-matrix"><a class="docs-heading-anchor" href="#System-matrix">System matrix</a><a id="System-matrix-1"></a><a class="docs-heading-anchor-permalink" href="#System-matrix" title="Permalink"></a></h2><p>Construct dynamic parallel MRI system model. It is block diagonal where each frame has its own sampling pattern. The input (image) here has size <code>(nx=128, ny=128, nt=40)</code>. The output (data) has size <code>(nsamp=2048, nc=12, nt=40)</code> because every frame has 16 phase-encode lines of 128 samples.</p><p>todo: precompute (i)fft along readout direction to save time</p><p>The code in the original Otazo et al. paper used an <code>ifft</code> in the forward model and an <code>fft</code> in the adjoint, so we must use a flag here to match that model.</p><pre><code class="language-julia hljs">Aotazo = (samp, smaps) -&gt; Asense(samp, smaps; unitary=true, fft_forward=false) # Otazo style
+A = block_diag([Aotazo(s, smaps) for s in eachslice(samp, dims=3)]...)
+#A = ComplexF32(1/sqrt(nx*ny)) * A # match Otazo&#39;s scaling
+(size(A), A._odim, A._idim)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((983040, 655360), (2048, 12, 40), (128, 128, 40))</code></pre><p>Reshape data to match the system model</p><pre><code class="language-julia hljs">if !@isdefined(ydata)
+    tmp = reshape(ydata0, :, nc, nt)
+    tmp = [tmp[vec(s),:,it] for (it,s) in enumerate(eachslice(samp, dims=3))]
+    ydata = cat(tmp..., dims=3) # (nsamp,nc,nt) = (2048,12,40) no &quot;zeros&quot;
+end
+size(ydata)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(2048, 12, 40)</code></pre><p>Final encoding operator <code>E</code> for L+S because we stack <code>X = [L;S]</code></p><pre><code class="language-julia hljs">tmp = LinearMapAA(I(nx*ny*nt);
+    odim=(nx,ny,nt), idim=(nx,ny,nt), T=ComplexF32, prop=(;name=&quot;I&quot;))
+tmp = kron([1 1], tmp)
+AII = redim(tmp; odim=(nx,ny,nt), idim=(nx,ny,nt,2)) # &quot;squeeze&quot; odim
+E = A * AII;</code></pre><p>Run power iteration to verify that <code>opnorm(E) = √2</code></p><pre><code class="language-julia hljs">if false
+    (_, σ1E) = poweriter(undim(E)) # 1.413 ≈ √2
+else
+    σ1E = √2
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.4142135623730951</code></pre><p>Check scale factor of Xinf. (It should be ≈1.)</p><pre><code class="language-julia hljs">tmp = A * Xinf
+scale0 = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.0090379f0 + 8.4778144f-8im</code></pre><p>Crude initial image</p><pre><code class="language-julia hljs">L0 = A&#39; * ydata # adjoint (zero-filled)
+S0 = zeros(ComplexF32, nx, ny, nt)
+X0 = cat(L0, S0, dims=ndims(L0)+1) # (nx, ny, nt, 2) = (128, 128, 40, 2)
+M0 = AII * X0 # L0 + S0
+pm0 = jim(M0, &quot;|Initial L+S via zero-filled recon|&quot;)</code></pre><img src="cecbdd88.svg" alt="Example block output"/><h2 id="LS-reconstruction"><a class="docs-heading-anchor" href="#LS-reconstruction">L+S reconstruction</a><a id="LS-reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#LS-reconstruction" title="Permalink"></a></h2><p>Prepare for proximal gradient methods</p><p>Scalars to match Otazo&#39;s results</p><pre><code class="language-julia hljs">scaleL = 130 / 1.2775 # Otazo&#39;s stopping St(1) / b1 constant squared
+scaleS = 1 / 1.2775; # 1 / b1 constant squared</code></pre><p>L+S regularizer</p><pre><code class="language-julia hljs">lambda_L = 0.01 # regularization parameter
+lambda_S = 0.01 * scaleS
+Lpart = X -&gt; selectdim(X, ndims(X), 1) # extract &quot;L&quot; from X
+Spart = X -&gt; selectdim(X, ndims(X), 2) # extract &quot;S&quot; from X
+nucnorm(L::AbstractMatrix) = sum(svdvals(L)) # nuclear norm
+nucnorm(L::AbstractArray) = nucnorm(reshape(L, :, nt)); # (nx*ny, nt) for L</code></pre><p>Optimization overall composite cost function</p><pre><code class="language-julia hljs">Fcost = X -&gt; 0.5 * norm(E * X - ydata)^2 +
+    lambda_L * scaleL * nucnorm(Lpart(X)) + # note scaleL !
+    lambda_S * norm(TF * Spart(X), 1);
+
+f_grad = X -&gt; E&#39; * (E * X - ydata); # gradient of data-fit term</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">#27 (generic function with 1 method)</code></pre><p>Lipschitz constant of data-fit term is 2 because A is unitary and AII is like ones(2,2).</p><pre><code class="language-julia hljs">f_L = 2; # σ1E^2</code></pre><p>Proximal operator for scaled nuclear norm <span>$β | X |_*$</span>: singular value soft thresholding (SVST).</p><pre><code class="language-julia hljs">function SVST(X::AbstractArray, β)
+    dims = size(X)
+    X = reshape(X, :, dims[end]) # assume time frame is the last dimension
+    U,s,V = svd(X)
+    sthresh = @. max(s - β, 0)
+    keep = findall(&gt;(0), sthresh)
+    X = U[:,keep] * Diagonal(sthresh[keep]) * V[:,keep]&#39;
+    X = reshape(X, dims)
+    return X
+end;</code></pre><p>Combine proximal operators for L and S parts to make overall prox for <code>X</code></p><pre><code class="language-julia hljs">soft = (v,c) -&gt; sign(v) * max(abs(v) - c, 0) # soft threshold function
+S_prox = (S, β) -&gt; TF&#39; * soft.(TF * S, β) # 1-norm proximal mapping for unitary TF
+g_prox = (X, c) -&gt; cat(dims=ndims(X),
+    SVST(Lpart(X), c * lambda_L * scaleL),
+    S_prox(Spart(X), c * lambda_S),
+);
+
+if false # check functions
+    @assert Fcost(X0) isa Real
+    tmp = f_grad(X0)
+    @assert size(tmp) == size(X0)
+    tmp = SVST(Lpart(X0), 1)
+    @assert size(tmp) == size(L0)
+    tmp = S_prox(S0, 1)
+    @assert size(tmp) == size(S0)
+    tmp = g_prox(X0, 1)
+    @assert size(tmp) == size(X0)
+end
+
+
+niter = 10
+fun = (iter, xk, yk, is_restart) -&gt; (Fcost(xk), xk); # logger</code></pre><p>Run PGM</p><pre><code class="language-julia hljs">if !@isdefined(Mpgm)
+    f_mu = 2/0.99 - f_L # trick to match 0.99 step size in Lin 1999
+    f_mu = 0
+    xpgm, out_pgm = pogm_restart(X0, (x) -&gt; 0, f_grad, f_L ;
+        f_mu, mom = :pgm, niter, g_prox, fun)
+    Mpgm = AII * xpgm
+end;</code></pre><p>Run FPGM (FISTA)</p><pre><code class="language-julia hljs">if !@isdefined(Mfpgm)
+    xfpgm, out_fpgm = pogm_restart(X0, (x) -&gt; 0, f_grad, f_L ;
+        mom = :fpgm, niter, g_prox, fun)
+    Mfpgm = AII * xfpgm
+end;</code></pre><p>Run POGM</p><pre><code class="language-julia hljs">if !@isdefined(Mpogm)
+    xpogm, out_pogm = pogm_restart(X0, (x) -&gt; 0, f_grad, f_L ;
+        mom = :pogm, niter, g_prox, fun)
+    Mpogm = AII * xpogm
+end;</code></pre><p>Look at final POGM image components</p><pre><code class="language-julia hljs">px = jim(
+ jif(Lpart(xpogm), &quot;L&quot;),
+ jif(Spart(xpogm), &quot;S&quot;),
+ jif(Mpogm, &quot;M=L+S&quot;),
+ jif(Xinf, &quot;Minf&quot;),
+)</code></pre><img src="49a7e5b4.svg" alt="Example block output"/><p>Plot cost function</p><pre><code class="language-julia hljs">costs = out -&gt; [o[1] for o in out]
+nrmsd = out -&gt; [norm(AII*o[2]-Xinf)/norm(Xinf) for o in out]
+cost_pgm = costs(out_pgm)
+cost_fpgm = costs(out_fpgm)
+cost_pogm = costs(out_pogm)
+pc = plot(xlabel = &quot;iteration&quot;, ylabel = &quot;cost&quot;)
+plot!(0:niter, cost_pgm, marker=:circle, label=&quot;PGM (ISTA)&quot;)
+plot!(0:niter, cost_fpgm, marker=:square, label=&quot;FPGM (FISTA)&quot;)
+plot!(0:niter, cost_pogm, marker=:star, label=&quot;POGM&quot;)</code></pre><img src="b4ff41f9.svg" alt="Example block output"/><p>Plot NRMSD vs Matlab Xinf</p><pre><code class="language-julia hljs">nrmsd_pgm = nrmsd(out_pgm)
+nrmsd_fpgm = nrmsd(out_fpgm)
+nrmsd_pogm = nrmsd(out_pogm)
+pd = plot(xlabel = &quot;iteration&quot;, ylabel = &quot;NRMSD vs Matlab Xinf&quot;)
+plot!(0:niter, nrmsd_pgm, marker=:circle, label=&quot;PGM (ISTA)&quot;)
+plot!(0:niter, nrmsd_fpgm, marker=:square, label=&quot;FPGM (FISTA)&quot;)
+plot!(0:niter, nrmsd_pogm, marker=:star, label=&quot;POGM&quot;)</code></pre><img src="e45c50a7.svg" alt="Example block output"/><h2 id="Discussion"><a class="docs-heading-anchor" href="#Discussion">Discussion</a><a id="Discussion-1"></a><a class="docs-heading-anchor-permalink" href="#Discussion" title="Permalink"></a></h2><p>todo</p><h3 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h3><p>This page was generated with the following version of Julia:</p><pre><code class="language-julia hljs">using InteractiveUtils: versioninfo
+io = IOBuffer(); versioninfo(io); split(String(take!(io)), &#39;\n&#39;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{SubString{String}}:
+ &quot;Julia Version 1.12.4&quot;
+ &quot;Commit 01a2eadb047 (2026-01-06 16:56 UTC)&quot;
+ &quot;Build Info:&quot;
+ &quot;  Official https://julialang.org release&quot;
+ &quot;Platform Info:&quot;
+ &quot;  OS: Linux (x86_64-linux-gnu)&quot;
+ &quot;  CPU: 4 × AMD EPYC 7763 64-Core Processor&quot;
+ &quot;  WORD_SIZE: 64&quot;
+ &quot;  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)&quot;
+ &quot;  GC: Built with stock GC&quot;
+ &quot;Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)&quot;
+ &quot;&quot;</code></pre><p>And with the following package versions</p><pre><code class="language-julia hljs">import Pkg; Pkg.status()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/Examples/Examples/docs/Project.toml`
+  [e30172f5] Documenter v1.16.1
+  [940e8692] Examples v0.0.1 `~/work/Examples/Examples`
+  [7a1cc6ca] FFTW v1.10.0
+  [f6369f11] ForwardDiff v1.3.1
+  [9ee76f2b] ImageGeoms v0.11.2
+  [787d08f9] ImageMorphology v0.4.7
+  [71a99df6] ImagePhantoms v0.8.1
+  [b964fa9f] LaTeXStrings v1.4.0
+  [7031d0ef] LazyGrids v1.1.0
+  [599c1a8e] LinearMapsAA v0.12.0
+  [98b081ad] Literate v2.21.0
+  [23992714] MAT v0.11.4
+  [7035ae7a] MIRT v0.18.3
+  [170b2178] MIRTjim v0.26.0
+  [efe261a4] NFFT v0.14.3
+  [91a5bcdd] Plots v1.41.4
+  [10745b16] Statistics v1.11.1
+  [2913bbd2] StatsBase v0.34.10
+  [1986cc42] Unitful v1.27.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [44cfe95a] Pkg v1.12.1
+  [9a3f8284] Random v1.11.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../4-cs-sense-2d/">« Compressed Sensing 2D pMRI </a><a class="docs-footer-nextpage" href="../6-precon/">DCF-based &quot;preconditioning&quot; in MRI »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 27 January 2026 04:02">Tuesday 27 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
