@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 ImageGeoms = "9ee76f2b-840d-4475-b6d6-e485c9297852"
 ImageMorphology = "787d08f9-d448-5407-9aad-5290dd7ab264"
