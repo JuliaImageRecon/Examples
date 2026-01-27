@@ -1,5 +1,5 @@
 #=
-# [Variable Projection: Two exponentials](@id varpro2)
+# [VarPro: Two exponentials](@id varpro2)
 
 Illustrate fitting bi-exponential model to data.
 
