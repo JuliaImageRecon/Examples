@@ -1,5 +1,5 @@
 #=
-# [Variable Projection: Two exponentials](@id varpro2)
+# [VarPro: Two exponentials](@id varpro2)
 
 Illustrate fitting bi-exponential model to data.
 
@@ -27,7 +27,7 @@ using LinearAlgebra: norm, Diagonal, diag, diagm, qr
 using MIRTjim: jim
 using Random: seed!; seed!(0)
 #using Unitful: @u_str, ms, s, mm
-ms = 0.001; s = 1; mm = 1 # avoid Unitful due to ForwarDiff
+ms = 0.001; s = 1; mm = 1 # avoid Unitful due to ForwardDiff
 using InteractiveUtils: versioninfo
 
 
@@ -63,14 +63,14 @@ r_true = Tnon(Tf.([100/s, 20/s]))
 x_true = (; c_true..., r_true...) # all parameters
 
 #=
-Signal model
+## Signal model
 
 This next function is the
 signal basis function(s) from physics.
 This is the only function that is model-specific.
 =#
 signal_bases(ra::Number, rb::Number, t::Number) =
-    [exp(-t * ra); exp(-t * rb)] # bi-exponential model
+    [exp(-t * ra); exp(-t * rb)]; # bi-exponential model
 
 #=
 The following signal helper functions
@@ -79,23 +79,23 @@ having a mix of linear and nonlinear signal parameters.
 
 Here there is just one scan parameter (echo time).
 
-These functions would need to be generalized
+- These functions would need to be generalized
 to handle multiple scan parameters
 (e.g., echo time, phase cycling factor, flip angle).
 
-They would also need to be generalized
+- They would also need to be generalized
 to handle models with "known" parameters
 (e.g., B0 and B1+).
 =#
 signal_bases(non::Tnon, t::Number) =
     signal_bases(non..., t)
 signal_bases(non::Tnon, tv::AbstractVector) =
-    stack(t -> signal_bases(non, t), tv; dims=1)
-# signal model that combines nonlinear and linear effects:
+    stack(t -> signal_bases(non, t), tv; dims=1);
+# Signal model that combines nonlinear and linear effects:
 signal(lin::Tlin, non::Tnon, tv::AbstractVector) =
     signal_bases(non, tv) * collect(lin);
 
-# signal model helpers:
+# Signal model helpers:
 signal(lin::AbstractVector, non::Tnon, tv::AbstractVector) =
    signal(Tlin(lin), non, tv)
 signal(lin, non::AbstractVector, tv::AbstractVector) =
@@ -110,7 +110,7 @@ signal(x::AbstractVector, tv::AbstractVector) =
    signal(Tall(x), tv)
 #src signal(x[1:length(Lin)], x[length(Lin)+1:end], tv) # ugly
 
-# Simulate data:
+# ## Simulate data:
 y_true = signal(c_true, r_true, tm)
 @assert y_true == signal(x_true, tm)
 tf = Tf.(range(0, M, 201) * Δte) # fine sampling for plots
@@ -135,7 +135,7 @@ yc = y_true_phased + σ * randn(Tc, M)
 @show 20 * log10(norm(yc) / norm(yc - y_true_phased)) # check σ
 
 # The phase of the noisy data becomes unreliable for low signal values:
-pp = scatter(tm, angle.(y_true_phased), label = "True data",
+pp = scatter(tm/ms, angle.(y_true_phased), label = "True data",
  xaxis = xaxis_t,
  yaxis = ("Phase", (-π, π), ((-1:1)*π, ["-π", "0", "π"])),
 )
@@ -202,7 +202,7 @@ ph = histogram((real(tmp) .- real(y_true[end])) / (σ/√2), bins=-4:0.1:4,
 #src Ts = u"s^-1"
 #src Ts = Tf
 #src roundr(rate) = round(Ts, Float64(Ts(rate)), digits=2)
-roundr(rate) = round(rate, digits=2)
+roundr(rate) = round(rate, digits=2);
 #src todo xaxis_td = ("Δt", (0,195).*ms, [0ms; tm_diff; M*Δte])
 
 
@@ -210,8 +210,8 @@ roundr(rate) = round(rate, digits=2)
 ## CRB
 Compute CRB for precision of unbiased estimator.
 This requires inverting the Fisher information matrix.
-Here the Fisher information matrix has units,
-so Julia's built-in inverse `inv` does not work.
+If the Fisher information matrix has units,
+then Julia's built-in inverse `inv` does not work.
 See 2.4.5.2 of Fessler 2024 book for tips.
 =#
 
@@ -247,11 +247,7 @@ fish = jac' * jac / σ^2;
 crb = inv_unitful(fish)
 
 round3(x) = round(x; digits=3)
-crb_std = Tall(round3.(sqrt.(diag(crb)))) # relabel
-#src @show 
-
-plot!(annotation = (27, 100,
- "CRB(r_a) = $(crb_std.ra)", :red))
+crb_std = Tall(round3.(sqrt.(diag(crb)))) # relabel CRB std. deviations
 
 
 #=
@@ -284,24 +280,27 @@ used in dictionary matching.
 ra_list = Tf.(range(50/s, 160/s, 221)) # linear spacing?
 rb_list = Tf.(range(0/s, 40/s, 81)) # linear spacing?
 bases_unnormalized(ra, rb) = signal_bases((;ra, rb), tm)
-dict = bases_unnormalized.(ra_list, rb_list')
+dict = bases_unnormalized.(ra_list, rb_list');
 
 # Plot the fast and slow dictionary components
 tmp = stack(first ∘ eachcol, dict[:,1])
-pd1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:dot)
+pd1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 tmp = stack(last ∘ eachcol, dict[1,:])
-pd2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:dot)
+pd2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 pd12 = plot(pd1, pd2, plot_title = "Dictionary")
 
+#
 dict_q = map(A -> Matrix(qr(A).Q), dict)
 dict_q = map(A -> sign(A[1]) * A, dict_q); # preserve sign of 1st basis
+
 #
 tmp = stack(first ∘ eachcol, dict_q[:,1])
-pq1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:dot)
+pq1 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 tmp = stack(last ∘ eachcol, dict_q[1,:])
-pq2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:dot)
+pq2 = plot(tm/ms, tmp[:,1:5:end]; xaxis=xaxis_t, marker=:o)
 pq12 = plot(pq1, pq2, plot_title = "Orthogonalized Dictionary")
 
+#
 varpro_cost(Q::Matrix, y::AbstractVector) = -norm(Q'*y)
 varpro_best(y) = findmin(Q -> varpro_cost(Q, y), dict_q)[2]
 
@@ -328,18 +327,16 @@ plot!(annotation = (24, 200, "CRB = $(roundr(crb_std.rb))", :red))
 
 #src gui(); throw(); # xx
 
-#src todo: NLLS
-
 #=
 ## Future work
 
-Biexponential case:
 - Compare to ML via VarPro
 - Compare to ML via NLLS
 - Cost contours, before and after eliminating x
 - MM approach?
 - GD?
 - Newton's method?
+- Units?
 =#
 
 include("../../inc/reproduce.jl")

@@ -222,11 +222,10 @@ fish1 = grad' * grad / σ^2
 # Compute CRB from Fisher information via unitful matrix inverse
 crb = inv_unitful(fish1)
 crb_r1 = Ts(sqrt(crb[2,2]))
-crb_r1_xknown = Ts(sqrt(1/fish1[2,2])) # CRB if M0 is known, about 0.72
+crb_r1_xknown = Ts(sqrt(1/fish1[2,2]))
 
 plot!(annotation = (27, 100,
  "CRB = $(roundr(crb_r1)) or $(roundr(crb_r1_xknown))", :red))
-
 
 
 #=
