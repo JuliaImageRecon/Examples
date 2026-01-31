@@ -75,14 +75,16 @@ FOV = 256mm # physical units!
 Δx = FOV / N # pixel size
 kmax = 1 / 2Δx
 kr = ((-N÷2):(N÷2)) / (N÷2) * kmax # radial sampling in k-space
+#src kr = ((-N):(N)) / (N) * kmax # radial sampling in k-space (over-sampled)
 Nr = length(kr) # N+1
 Nϕ = 3N÷2 # theoretically should be about π/2 * N
 kϕ = (0:Nϕ-1)/Nϕ * π # angular samples
 νx = kr * cos.(kϕ)' # N × Nϕ k-space sampling in cycles/mm
 νy = kr * sin.(kϕ)'
-plot(νx, νy,
-    xlabel=L"\nu_x", ylabel=L"\nu_y",
-    aspect_ratio = 1,
+pν = plot(νx, νy,
+    xaxis = (L"ν_x", (-1,1) .* (1.1kmax),),
+    yaxis = (L"ν_y", (-1,1) .* (1.1kmax),),
+    aspect_ratio = 1, size = (400, 400),
     title = "Radial k-space sampling",
 )
 
@@ -99,14 +101,11 @@ digital frequencies have pseudo-units of radians / pixel.
 Ωx = (2π * Δx) * νx # N × Nϕ grid of k-space sample locations
 Ωy = (2π * Δx) * νy # in pseudo-units of radians / sample
 
-scatter(Ωx, Ωy,
-    xlabel=L"\Omega_x", ylabel=L"\Omega_y",
-    xticks=((-1:1)*π, ["-π", "0", "π"]),
-    yticks=((-1:1)*π, ["-π", "0", "π"]),
-    xlims=(-π,π) .* 1.1,
-    ylims=(-π,π) .* 1.1,
-    aspect_ratio = 1, markersize = 0.5,
-    title = "Radial k-space sampling",
+pΩ = scatter(Ωx, Ωy,
+    xaxis = (L"\Omega_x", (-π,π) .* 1.1, ((-1:1)*π, ["-π", "0", "π"])),
+    yaxis = (L"\Omega_y", (-π,π) .* 1.1, ((-1:1)*π, ["-π", "0", "π"])),
+    aspect_ratio = 1, markersize = 0.5, size = (500, 400),
+    title = "Radial k-space sampling: Nϕ=$Nϕ Nr=$Nr",
 )
 
 #
@@ -377,6 +376,51 @@ p6f = jimk(abs.(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
 #src p5f = jimk(logger(Ax_to_y(A * xls) - data) / dscale, "|LS-CG kspace error|")
 #src p6f = jimk(logger(Ax_to_y(A * xtik) - data) / dscale, "|Tik. kspace error|")
 p56f = plot(p5f, p6f)
+
+
+#=
+The preceding error images
+show artifacts near the outskirts of the FOV,
+a point emphasized in
+[the work of Chan and Haldar](http://arxiv.org/abs/2505.05647).
+
+Next we explore whether a larger FOV
+can mitigate those artifacts,
+at the price of increased computation.
+=#
+
+FOV2 = 3FOV/2 # increase FOV and N by 50%
+N2 = 3N÷2
+A2 = Anufft([vec(Ωx) vec(Ωy)], (N2,N2); n_shift = [N2/2,N2/2]);
+x2 = (-(N2÷2):(N2÷2-1)) * Δx
+y2 = (-(N2÷2):(N2÷2-1)) * Δx
+
+gridded5 = A2' * vec(dcf .* data)
+pg5g = jim(x2, y2, gridded5, title="NUFFT gridding with 2× FOV"; clim,
+ xlim = (-1,1) .* (FOV/2),
+ ylim = (-1,1) .* (FOV/2),
+);
+
+xls2, _ = ncg([A2], [gradf], [curvf], gridded5 #= x0 =#; niter = 20)
+pg5l = jim(x2, y2, xls2, title="LS-CG with 2× FOV"; clim,
+ xlim = (-1,1) .* (FOV/2),
+ ylim = (-1,1) .* (FOV/2),
+);
+
+β₂ = 1e1
+xtik2, _ = ncg([A2, sqrt(β₂)*I], [gradf, x -> β₂*x], [curvf, x -> β₂],
+    gridded5 #= x0 =#; niter = 80)
+pg5t = jim(x2, y2, xtik2, title="Tik with 2× FOV"; clim,
+ xlim = (-1,1) .* (FOV/2),
+ ylim = (-1,1) .* (FOV/2),
+);
+
+#=
+Expanded FOV does not help here.
+However, over-sampling in the readout direction helps a lot
+(results not shown).
+=#
+plot(pg5g, pg5l, pg5t; layout=(1,3), size=(1400, 400))
 
 
 #=
