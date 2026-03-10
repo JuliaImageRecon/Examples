@@ -5,8 +5,7 @@ This page illustrates dynamic parallel MRI image reconstruction
 using a low-rank plus sparse (L+S) model
 optimized by a fast algorithm
 described in the paper
-by Claire Lin and Jeff Fessler
-[Efficient Dynamic Parallel MRI Reconstruction for the Low-Rank Plus Sparse Model](https://doi.org/10.1109/TCI.2018.2882089),
+["Efficient Dynamic Parallel MRI Reconstruction for the Low-Rank Plus Sparse Model"](https://doi.org/10.1109/TCI.2018.2882089),
 IEEE Trans. on Computational Imaging, 5(1):17-26, 2019,
 by Claire Lin and Jeff Fessler,
 EECS Department, University of Michigan.
@@ -24,21 +23,47 @@ please cite that paper.
 
 # ### Setup
 
-# Packages needed here.
+#=
+First we add the Julia packages that are need for these examples.
+Change `false` to `true` in the following code block
+if you are using any of the following packages for the first time.
+=#
 
-## using Unitful: s
-using Plots; cgrad, default(markerstrokecolor=:auto, label="")
+if false
+    import Pkg
+    Pkg.add([
+        "Downloads"
+        "FFTW"
+        "InteractiveUtils"
+        "LaTeXStrings"
+        "LinearMapsAA"
+        "MAT"
+        "MIRT"
+        "MIRTjim"
+        "Plots"
+        "Random"
+        "Statistics"
+#src    "Unitful"
+    ])
+end
+
+# Now tell this Julia session to use the following packages.
+# Run `Pkg.add()` in the preceding code block first, if needed.
+
+#src using Unitful: s
+import Downloads # todo: use Fetch or DataDeps?
+using FFTW: fft!, bfft!, fftshift!
+using InteractiveUtils: versioninfo
+using LaTeXStrings
+using LinearAlgebra: dot, norm, svd, svdvals, Diagonal, I
+using LinearMapsAA: LinearMapAA, block_diag, redim, undim
+using MAT: matread
 using MIRT: Afft, Asense, embed
 using MIRT: pogm_restart, poweriter
 using MIRTjim: jim, prompt
-using FFTW: fft!, bfft!, fftshift!
-using LinearMapsAA: LinearMapAA, block_diag, redim, undim
-using MAT: matread
-import Downloads # todo: use Fetch or DataDeps?
-using LinearAlgebra: dot, norm, svd, svdvals, Diagonal, I
+using Plots; cgrad, default(markerstrokecolor=:auto, label="")
 using Random: seed!
 using Statistics: mean
-using LaTeXStrings
 
 
 # The following line is helpful when running this file as a script;
@@ -64,7 +89,7 @@ X = \hat{L} + \hat{S}
 (\hat{L}, \hat{S})
 = \arg \min_{L,S} \frac{1}{2} \| E (L + S) - d \|_2^2
  + λ_L \| L \|_*
- + λ_S \| vec(T S) \|_1
+ + λ_S \| \text{vec}(T S) \|_1
 ```
 where ``T`` is a temporal unitary FFT,
 ``E`` is an encoding operator (system matrix),
@@ -99,7 +124,7 @@ if !@isdefined(data)
 end;
 
 # Show converged image as a preview:
-pinf = jim(Xinf, L"\mathrm{Converged\ image\ sequence } X_∞")
+pinf = jim(Xinf, L"\mathrm{Converged\ image\ sequence\ } X_∞")
 
 # Organize k-space data:
 if !@isdefined(ydata0)
@@ -127,7 +152,7 @@ Are all k-space rows are sampled in one of the 40 frames?
 Sadly no.
 The 10 blue rows shown below are never sampled.
 A better sampling pattern design
-could have avoided this issue.
+could have avoided this issue!
 =#
 samp_sum = sum(samp, dims=3)
 color = cgrad([:blue, :black, :white], [0, 1/2nt, 1])
@@ -147,7 +172,6 @@ if !@isdefined(smaps)
     pmap = jim(smaps, "Normalized |coil maps| for $nc coils")
 end
 
-
 #=
 Temporal unitary FFT sparsifying transform
 for image sequence of size `(nx, ny, nt)`:
@@ -163,10 +187,10 @@ end
 
 
 #=
-Examine temporal Fourier sparsity of Xinf.
+Examine temporal Fourier sparsity of `Xinf`.
 The low temporal frequencies dominate,
 as expected,
-because Xinf was reconstructed
+because `Xinf` was reconstructed
 using this regularizer!
 =#
 tmp = TF * Xinf
@@ -209,7 +233,7 @@ end
 size(ydata)
 
 
-# Final encoding operator `E` for L+S because we stack `X = [L;S]`
+# Final encoding operator `E` for ``L+S`` because we stack `X = [L;S]`
 tmp = LinearMapAA(I(nx*ny*nt);
     odim=(nx,ny,nt), idim=(nx,ny,nt), T=ComplexF32, prop=(;name="I"))
 tmp = kron([1 1], tmp)
@@ -223,7 +247,7 @@ else
     σ1E = √2
 end
 
-# Check scale factor of Xinf. (It should be ≈1.)
+# Check scale factor of `Xinf`. (It should be ≈1.)
 tmp = A * Xinf
 scale0 = dot(tmp, ydata) / norm(tmp)^2 # 1.009 ≈ 1
 
@@ -268,7 +292,7 @@ because A is unitary and AII is like ones(2,2).
 =#
 f_L = 2; # σ1E^2
 
-# Proximal operator for scaled nuclear norm ``β | X |_*``:
+# Proximal operator for scaled nuclear norm ``β ‖ X ‖_*``:
 # singular value soft thresholding (SVST).
 function SVST(X::AbstractArray, β)
     dims = size(X)
@@ -281,7 +305,7 @@ function SVST(X::AbstractArray, β)
     return X
 end;
 
-# Combine proximal operators for L and S parts to make overall prox for `X`
+# Combine proximal operators for `L` and `S` parts to make overall prox for `X`
 soft = (v,c) -> sign(v) * max(abs(v) - c, 0) # soft threshold function
 S_prox = (S, β) -> TF' * soft.(TF * S, β) # 1-norm proximal mapping for unitary TF
 g_prox = (X, c) -> cat(dims=ndims(X),
@@ -303,7 +327,7 @@ end
 
 
 niter = 10
-fun = (iter, xk, yk, is_restart) -> (Fcost(xk), xk); # logger
+fun = (iter, xk, yk, is_restart) -> (Fcost(xk), xk, iter, is_restart); # logger
 
 # Run PGM
 if !@isdefined(Mpgm)
@@ -347,7 +371,7 @@ plot!(0:niter, cost_pgm, marker=:circle, label="PGM (ISTA)")
 plot!(0:niter, cost_fpgm, marker=:square, label="FPGM (FISTA)")
 plot!(0:niter, cost_pogm, marker=:star, label="POGM")
 
-# Plot NRMSD vs Matlab Xinf
+# Plot NRMSD vs Matlab `Xinf`
 nrmsd_pgm = nrmsd(out_pgm)
 nrmsd_fpgm = nrmsd(out_fpgm)
 nrmsd_pogm = nrmsd(out_pogm)
@@ -355,6 +379,12 @@ pd = plot(xlabel = "iteration", ylabel = "NRMSD vs Matlab Xinf")
 plot!(0:niter, nrmsd_pgm, marker=:circle, label="PGM (ISTA)")
 plot!(0:niter, nrmsd_fpgm, marker=:square, label="FPGM (FISTA)")
 plot!(0:niter, nrmsd_pogm, marker=:star, label="POGM")
+
+# For only 10 iterations, restart is unexpected
+fourth(i) = i[4]
+any4(out) = any(map(fourth, out))
+any(any4, (out_pgm, out_fpgm, out_pogm)) && throw("unexpected restart")
+
 
 #src # todo: need fully sampled data like in Fig2 of paper and in OnAir to proceed
 
@@ -379,7 +409,7 @@ plot!(0:niter, nrmsd_pogm, marker=:star, label="POGM")
 #=
 ## Discussion
 
-todo
+As expected, POGM converged the fastest here.
 =#
 
 include("../../inc/reproduce.jl")
