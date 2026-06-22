@@ -411,5 +411,3 @@ any(any4, (out_pgm, out_fpgm, out_pogm)) && throw("unexpected restart")
 
 As expected, POGM converged the fastest here.
 =#
-
-include("../../inc/reproduce.jl")

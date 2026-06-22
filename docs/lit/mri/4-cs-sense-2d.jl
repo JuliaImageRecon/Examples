@@ -376,6 +376,3 @@ but aliasing artifacts (ripples)
 were greatly reduced
 by the CS-SENSE reconstruction method.
 =#
-
-
-include("../../inc/reproduce.jl")
