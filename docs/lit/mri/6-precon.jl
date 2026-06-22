@@ -300,6 +300,3 @@ p5 = plot(
 
 #
 isinteractive() && prompt();
-
-
-include("../../inc/reproduce.jl")

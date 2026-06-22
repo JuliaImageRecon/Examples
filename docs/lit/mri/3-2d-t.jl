@@ -207,5 +207,3 @@ anim3 = @animate for it in 1:nt
     )
 end
 gif(anim3; fps = 6)
-
-include("../../inc/reproduce.jl")

@@ -206,6 +206,3 @@ p3 = jim(Xpogm, "POGM recon")
 p5 = jim(X0 - Xtrue, "X0 error", clim=(0,2))
 p6 = jim(Xpogm - Xtrue, "Xpogm error", clim=(0,2))
 pe = jim(p2, p3, p5, p6)
-
-
-include("../../inc/reproduce.jl")
